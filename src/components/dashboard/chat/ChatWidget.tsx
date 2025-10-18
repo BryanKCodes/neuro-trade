@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { IoSend } from "react-icons/io5";
-import Message from "@/components/Chat/Message";
+import Message from "@/components/dashboard/chat/Message";
 
 export default function ChatWidget() {
   const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
@@ -38,6 +38,7 @@ export default function ChatWidget() {
     const userMessage = input;
     setInput("");
 
+    // Inside handleSend in ChatWidget.tsx
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -45,11 +46,20 @@ export default function ChatWidget() {
         body: JSON.stringify({ message: userMessage }),
       });
       const data = await res.json();
+
+      // Store the returned strategy in localStorage for later
+      if (data.strategy) {
+        localStorage.setItem("currentStrategy", JSON.stringify(data.strategy));
+      }
+
       if (data.reply) {
         setMessages((prev) => [...prev, { text: data.reply, isUser: false }]);
       }
     } catch (e) {
-      setMessages((prev) => [...prev, { text: "Error: failed to get response", isUser: false }]);
+      setMessages((prev) => [
+        ...prev,
+        { text: "Error: failed to get response", isUser: false },
+      ]);
     }
   };
 
@@ -85,15 +95,15 @@ export default function ChatWidget() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder="Describe your trading strategy..."
+          placeholder="Describe your trading strategy"
           rows={1}
-          className="resize-none overflow-y-auto max-h-[120px] bg-transparent text-sm 
+          className="resize-none overflow-y-auto max-h-[120px] bg-transparent text-m 
              text-black dark:text-white placeholder-gray-500 dark:placeholder-neutral-400 
              focus:outline-none scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 
              scrollbar-track-transparent"
           style={{ height: inputHeight }}
         />
-        {/* UPDATED: Button is now a styled circle with proper dark/light mode styles */}
+
         <button
           onClick={handleSend}
           disabled={!input.trim()}

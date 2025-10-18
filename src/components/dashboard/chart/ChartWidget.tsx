@@ -1,7 +1,12 @@
 "use client";
 import { useEffect, useRef } from "react";
 
-export default function ChartWidget({ symbol = "NASDAQ:AAPL", interval = "D" }) {
+type ChartWidgetProps = {
+  symbol?: string;
+  interval?: string;
+};
+
+const ChartWidget = ({ symbol = "NASDAQ:AAPL", interval = "D" }: ChartWidgetProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,3 +42,5 @@ export default function ChartWidget({ symbol = "NASDAQ:AAPL", interval = "D" }) 
 
   return <div id="tv_chart_container" ref={containerRef} />;
 }
+
+export default ChartWidget;

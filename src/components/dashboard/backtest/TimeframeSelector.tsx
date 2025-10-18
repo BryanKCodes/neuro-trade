@@ -131,7 +131,7 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
 
           {dropdownOpen && (
             <div
-              className="absolute right-0 mt-2 w-40 max-h-64 overflow-auto rounded-md 
+              className="absolute z-1 right-0 mt-2 w-40 max-h-64 overflow-auto rounded-md 
                             border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 
                             shadow-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 
                             scrollbar-track-transparent"

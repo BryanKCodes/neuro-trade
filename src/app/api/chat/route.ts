@@ -1,48 +1,71 @@
-import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { NextResponse } from "next/server";
 
-/*
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-*/
+export async function POST(req: Request) {
+  const { message } = await req.json();
 
-export async function POST(request: NextRequest) {
-  try {
-    const { message } = await request.json();
+  // This is your fixed dummy JSON strategy
+  const strategyJson = {
+    rules: [
+      {
+        trade: "long",
+        filter: { type: "TruePredicate" },
+        entry: {
+          type: "Or",
+          predicates: [
+            {
+              type: "Crossover",
+              first: { type: "Price" },
+              second: {
+                type: "Add",
+                left: { type: "EMA", period: 20 },
+                right: { type: "ATR", period: 14 },
+              },
+            },
+            {
+              type: "Threshold",
+              below: {
+                type: "Subtract",
+                left: { type: "EMA", period: 100 },
+                right: { type: "EMA", period: 200 },
+              },
+              above: { type: "Number", value: 0 },
+            },
+          ],
+        },
+        stop_loss: {
+          type: "Subtract",
+          left: { type: "Price" },
+          right: {
+            type: "Multiply",
+            left: { type: "ATR", period: 14 },
+            right: { type: "Number", value: 3.0 },
+          },
+        },
+        take_profit: {
+          type: "Add",
+          left: { type: "Price" },
+          right: {
+            type: "Multiply",
+            left: { type: "ATR", period: 14 },
+            right: { type: "Number", value: 3.0 },
+          },
+        },
+        sizing: {
+          type: "Divide",
+          left: {
+            type: "Multiply",
+            left: { type: "Number", value: 0.02 },
+            right: { type: "Cash" },
+          },
+          right: { type: "ATR", period: 14 },
+        },
+        exit: { type: "NonePredicate" },
+      },
+    ],
+  };
 
-    if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-    }
-
-    const systemPrompt = `
-You are an expert AI assistant specialized ONLY in financial investment strategies and backtesting. 
-- If the user's message is NOT about trading, investing, or financial strategies, politely say you can only assist with those topics.
-- If the user's message asks to build or validate a strategy, generate or validate the JSON DSL accordingly using the provided specification.
-- Otherwise, respond normally but related to finance and investments.
-`;
-
-    /*
-    // Compose messages in OpenAI chat format
-    const chatCompletion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: message },
-        ],
-        temperature: 0.3,
-    });
-
-    const reply = chatCompletion.choices[0].message?.content || "Sorry, no response.";
-
-    return NextResponse.json({ reply });
-    */
-
-    const snippet = message.split(" ").slice(0, 10).join(" ") + (message.split(" ").length > 10 ? "..." : "");
-
-    return NextResponse.json({ reply: `You said: ${snippet}` });
-  } catch (error) {
-    console.error("OpenAI API error:", error);
-    return NextResponse.json({ error: "Failed to get response" }, { status: 500 });
-  }
+  return NextResponse.json({
+    reply: `Here's your dummy strategy for testing, based on: "${message}"`,
+    strategy: strategyJson,
+  });
 }

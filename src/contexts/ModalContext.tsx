@@ -17,7 +17,7 @@ export function useModal() {
   return ctx;
 }
 
-export function ModalProvider({ children }: { children: ReactNode }) {
+export const ModalProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState<ReactNode>(null);
   const [mounted, setMounted] = useState(false);

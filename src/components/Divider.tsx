@@ -1,4 +1,4 @@
-export default function Divider({ isHorizontal = false }: { isHorizontal?: boolean }) {
+const Divider = ({ isHorizontal = false }: { isHorizontal?: boolean }) => {
   return (
     <div
       className={
@@ -9,3 +9,5 @@ export default function Divider({ isHorizontal = false }: { isHorizontal?: boole
     />
   );
 }
+
+export default Divider;

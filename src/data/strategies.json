@@ -1,0 +1,41 @@
+{
+  "strategies": [
+    {
+      "name": "Buy and Hold",
+      "json": {
+        "rules": [
+          {
+            "trade": "long",
+            "filter": {
+              "type": "TruePredicate"
+            },
+            "entry": {
+              "type": "Interval",
+              "interval": 1,
+              "start": 0,
+              "stop": 1
+            },
+            "exit": {
+              "type": "FalsePredicate"
+            },
+            "stop_loss": {
+              "type": "NoneExpression"
+            },
+            "take_profit": {
+              "type": "NoneExpression"
+            },
+            "sizing": {
+              "type": "Divide",
+              "left": {
+                "type": "Cash"
+              },
+              "right": {
+                "type": "Price"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

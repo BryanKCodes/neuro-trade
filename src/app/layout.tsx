@@ -1,4 +1,6 @@
+import { ReactNode } from "react";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ModalProvider } from "@/contexts/ModalContext";
 
 export const metadata = {
@@ -6,14 +8,22 @@ export const metadata = {
   description: "Next.js App Router layout",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+type RootLayoutProps = {
+  children: ReactNode;
+};
+
+const RootLayout = ({ children }: RootLayoutProps) => {
   return (
     <html lang="en">
       <body>
-        <ModalProvider>
-          {children}
-        </ModalProvider>
+        <AuthProvider>
+          <ModalProvider>
+            {children}
+          </ModalProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
+export default RootLayout;
