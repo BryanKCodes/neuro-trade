@@ -1,0 +1,123 @@
+{
+  "rules": [
+    {
+      "trade": "long",
+      "filter": {
+        "type": "Threshold",
+        "below": { "type": "EMA", "period": 200 },
+        "above": { "type": "EMA", "period": 50 }
+      },
+      "entry": {
+        "type": "Crossover",
+        "first": { "type": "Price", "output": "high" },
+        "second": { "type": "DC", "period": 20, "output": "upper" },
+        "direction": "above"
+      },
+      "exit": {
+        "type": "Crossover",
+        "first": { "type": "Price", "output": "low" },
+        "second": { "type": "EMA", "period": 50 },
+        "direction": "below"
+      },
+      "stop_loss": {
+        "type": "Subtract",
+        "left": { "type": "DC", "period": 100, "output": "upper" },
+        "right": {
+          "type": "Multiply",
+          "left": { "type": "ATR", "period": 14 },
+          "right": { "type": "Number", "value": 2 }
+        }
+      },
+      "take_profit": {
+        "type": "Add",
+        "left": { "type": "Price" },
+        "right": {
+          "type": "Multiply",
+          "left": { "type": "ATR", "period": 14 },
+          "right": { "type": "Number", "value": 2 }
+        }
+      },
+      "sizing": {
+        "type": "Static",
+        "expression": {
+          "type": "Divide",
+          "left": {
+            "type": "Multiply",
+            "left": { "type": "Number", "value": 0.05 },
+            "right": { "type": "Cash" }
+          },
+          "right": {
+            "type": "Subtract",
+            "left": { "type": "Price" },
+            "right": { "type": "StopLoss" }
+          }
+        }
+      }
+    },
+    {
+      "trade": "short",
+      "filter": {
+        "type": "And",
+        "predicates": [
+          {
+            "type": "Threshold",
+            "below": { "type": "EMA", "period": 200 },
+            "above": { "type": "EMA", "period": 50 }
+          },
+          {
+            "type": "Threshold",
+            "below": {
+              "type": "Divide",
+              "left": { "type": "ATR", "period": 14 },
+              "right": {
+                "type": "ATR",
+                "period": 14,
+                "series": { "type": "ATR", "period": 14 }
+              }
+            },
+            "above": { "type": "Number", "value": 1.2 }
+          }
+        ]
+      },
+      "entry": {
+        "type": "Crossover",
+        "first": { "type": "Price", "output": "low" },
+        "second": { "type": "DC", "period": 20, "output": "lower" },
+        "direction": "below"
+      },
+      "exit": {
+        "type": "Crossover",
+        "first": { "type": "Price", "output": "high" },
+        "second": { "type": "EMA", "period": 50 },
+        "direction": "above"
+      },
+      "stop_loss": {
+        "type": "Add",
+        "left": { "type": "DC", "period": 100, "output": "lower" },
+        "right": {
+          "type": "Multiply",
+          "left": { "type": "ATR", "period": 14 },
+          "right": { "type": "Number", "value": 2 }
+        }
+      },
+      "take_profit": {
+        "type": "Subtract",
+        "left": { "type": "Price" },
+        "right": {
+          "type": "Multiply",
+          "left": { "type": "ATR", "period": 14 },
+          "right": { "type": "Number", "value": 2 }
+        }
+      },
+      "sizing": {
+        "type": "Divide",
+        "left": {
+          "type": "Multiply",
+          "left": { "type": "Number", "value": 0.02 },
+          "right": { "type": "Cash" }
+        },
+        "right": { "type": "ATR", "period": 14 }
+      }
+    }
+  ]
+}
