@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -58,8 +58,9 @@ class DCModel(BaseComponent):
     over a specified period, often used to identify breakouts.
     """
     type: Literal["DC"] = "DC"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         20,
+        ge=1,
         description="Length of look-back window. Must be ≥ 1."
     )
     output: Literal["upper", "mid", "lower"] = Field(

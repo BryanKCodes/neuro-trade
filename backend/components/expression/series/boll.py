@@ -1,13 +1,14 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -55,20 +56,22 @@ class BOLLModel(BaseComponent):
     commonly used to identify overbought or oversold conditions.
     """
     type: Literal["BOLL"] = "BOLL"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         20,
+        ge=1,
         description="Moving average period for the bands. Must be ≥ 1."
     )
-    stddev: conint(ge=0) = Field(
+    stddev: int = Field(
         2,
+        ge=0,
         description="Standard deviation multiplier. Must be ≥ 0."
     )
     band: Literal["mid", "upper", "lower"] = Field(
         "mid",
         description="Which band to return: 'upper', 'mid', or 'lower'. Defaults to 'mid'"
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description=(
             "Input Series for band calculation (defaults to Price). "
             "Useful for indicator composition."

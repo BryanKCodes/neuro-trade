@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Union
 
 def calculate_metrics(
         equity_curve: pd.Series,
-        trades: List[Trade] = None,
+        trades: Optional[List[Trade]] = None,
         benchmark_curve: Optional[pd.Series] = None,
         interval: str = "1d"
 ) -> Dict[str, Dict[str, Union[str, int]]]:

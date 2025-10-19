@@ -1,14 +1,15 @@
 import pandas as pd
-from pydantic import Field, confloat
+from pydantic import Field
 import numpy as np
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -76,12 +77,13 @@ class ZigZagModel(BaseComponent):
     enabling detection of structural swings across various indicators.
     """
     type: Literal["ZigZag"] = "ZigZag"
-    threshold: confloat(ge=0.0) = Field(
+    threshold: float = Field(
         5.0,
+        ge=0.0,
         description="Minimum percentage move required to register a new pivot. Must be ≥ 0.0."
     )
-    series: "AnyExpression" = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series to apply the ZigZag filter to. Defaults to Price('close')."
     )
 

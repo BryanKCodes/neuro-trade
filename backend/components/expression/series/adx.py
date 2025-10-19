@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -64,7 +64,8 @@ class ADXModel(BaseComponent):
     and -DI (Negative Directional Indicator) to measure trend strength and direction.
     """
     type: Literal["ADX"] = "ADX"
-    period: conint(ge=1) = Field(
+    period: int = Field(
+        ge=1,
         default=14,
         description="Lookback period for ADX. Must be >= 1."
     )

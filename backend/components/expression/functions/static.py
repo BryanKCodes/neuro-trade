@@ -1,13 +1,14 @@
 import numpy as np
 import pandas as pd
 from pydantic import Field
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression import Expression
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnyExpression
 
 
 # ==================================

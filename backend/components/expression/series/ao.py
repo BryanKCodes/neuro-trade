@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint, field_validator
+from pydantic import Field, field_validator
 from typing import Literal
 
 from ai import BaseComponent
@@ -36,12 +36,14 @@ class AOModel(BaseComponent):
     Simple Moving Averages (SMAs), typically using median price.
     """
     type: Literal["AO"] = "AO"
-    fast: conint(ge=1) = Field(
+    fast: int = Field(
         5,
+        ge=1,
         description="Period for the fast SMA. Must be ≥ 1."
     )
-    slow: conint(ge=1) = Field(
+    slow: int = Field(
         34,
+        ge=1,
         description="Period for the slow SMA. Must be > fast period."
     )
 

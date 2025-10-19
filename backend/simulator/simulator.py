@@ -22,10 +22,9 @@ class Simulator:
         if duration_days is None:
             return 0
         target_date = self.df.index[-1] - timedelta(days=duration_days)
-        eligible = self.df[self.df.index >= target_date]
-        if not eligible.empty:
-            return self.df.index.get_loc(eligible.index[0])
-        return 0
+        # searchsorted returns the insertion point, which is exactly the start index
+        start_idx = self.df.index.searchsorted(target_date, side="left")
+        return int(start_idx)
 
     def run(self) -> None:
         self.df["Cash"] = np.full(len(self.df), self._portfolio_value)

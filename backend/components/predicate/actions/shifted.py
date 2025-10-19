@@ -1,12 +1,13 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnyPredicate
 
 
 # ==================================
@@ -39,12 +40,13 @@ class ShiftedModel(BaseComponent):
     Example: "Was RSI overbought 5 bars ago?"
     """
     type: Literal["Shifted"] = "Shifted"
-    predicate: "AnyPredicate" = Field(
+    predicate: AnyPredicate = Field(
         ...,
         description="Predicate to evaluate in the past."
     )
-    shift: conint(ge=1) = Field(
+    shift: int = Field(
         5,
+        ge=1,
         description="Number of bars to shift backward. Must be ≥ 1."
     )
 

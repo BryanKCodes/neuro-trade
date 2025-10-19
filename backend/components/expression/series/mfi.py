@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -34,8 +34,9 @@ class MFIModel(BaseComponent):
     in an asset, similar to RSI but volume-weighted.
     """
     type: Literal["MFI"] = "MFI"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         14,
+        ge=1,
         description="Lookback period used to compute the MFI. Must be ≥ 1."
     )
 

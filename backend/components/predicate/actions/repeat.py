@@ -1,12 +1,13 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal, Optional
+from pydantic import Field
+from typing import Literal, Optional, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnyPredicate
 
 
 # ==================================
@@ -49,16 +50,18 @@ class RepeatModel(BaseComponent):
     Example: "RSI < 30 at least 3 times in last 7 bars."
     """
     type: Literal["Repeat"] = "Repeat"
-    predicate: "AnyPredicate" = Field(
+    predicate: AnyPredicate = Field(
         ...,
         description="Predicate to check multiple times over the lookback window."
     )
-    count: conint(ge=1) = Field(
+    count: int = Field(
         3,
+        ge=1,
         description="Minimum number of times the predicate must evaluate True. Must be ≥ 1."
     )
-    lookback: Optional[conint(ge=1)] = Field(
+    lookback: Optional[int] = Field(
         None,
+        ge=1,
         description="Number of bars to look back. If omitted, defaults to the count."
     )
 

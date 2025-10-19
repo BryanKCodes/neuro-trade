@@ -1,14 +1,15 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -42,12 +43,13 @@ class RSIModel(BaseComponent):
     or oversold conditions in the price of a stock or other asset.
     """
     type: Literal["RSI"] = "RSI"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         ...,
+        ge=1,
         description="Lookback period for RSI computation. Must be ≥ 1."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series to compute RSI from. Defaults to closing price."
     )
 

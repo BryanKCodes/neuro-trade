@@ -1,13 +1,14 @@
 import pandas as pd
 from pydantic import Field
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression import Expression
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnyExpression
 
 
 # ==================================
@@ -35,6 +36,10 @@ class Crossover(Predicate):
         val2_prev = self.second.calculate(i - 1, df, **kwargs)
         val1_now = self.first.calculate(i, df, **kwargs)
         val2_now = self.second.calculate(i, df, **kwargs)
+
+        # Check for None values
+        if val1_prev is None or val2_prev is None or val1_now is None or val2_now is None:
+            return False
 
         # Define the conditions for each type of cross
         crossed_above = val1_prev < val2_prev and val1_now >= val2_now
@@ -66,11 +71,11 @@ class CrossoverModel(BaseComponent):
     - 'any'    → True on any cross (either direction).
     """
     type: Literal["Crossover"] = "Crossover"
-    first: "AnyExpression" = Field(
+    first: AnyExpression = Field(
         ...,
         description="The first expression (e.g. fast MA). Often the faster-moving series."
     )
-    second: "AnyExpression" = Field(
+    second: AnyExpression = Field(
         ...,
         description="The second expression (e.g. slow MA). Often the slower-moving series."
     )

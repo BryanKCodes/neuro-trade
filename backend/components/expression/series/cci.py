@@ -1,13 +1,14 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -43,12 +44,13 @@ class CCIModel(BaseComponent):
     Used to identify cyclical trends by measuring deviation from the mean.
     """
     type: Literal["CCI"] = "CCI"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         14,
+        ge=1,
         description="Look-back period for CCI. Must be ≥ 1."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series on which to compute CCI. Defaults to closing Price."
     )
 

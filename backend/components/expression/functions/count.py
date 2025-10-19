@@ -1,20 +1,23 @@
+from __future__ import annotations
+
 import pandas as pd
 from pydantic import Field
-from typing import Literal
+from typing import List, Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression import Expression
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnyPredicate
 
 
 # ==================================
 # 1. The Logic Class
 # ==================================
 class Count(Expression):
-    def __init__(self, predicates: list[Predicate]):
+    def __init__(self, predicates: List[Predicate]):
         """
         :param predicates: The list of predicates for counting.
         """
@@ -44,7 +47,7 @@ class CountModel(BaseComponent):
     to dynamically scale risk based on number of confluences.
     """
     type: Literal["Count"] = "Count"
-    predicates: list[AnyPredicate] = Field(
+    predicates: List[AnyPredicate] = Field(
         ...,
         description=(
             "List of predicates to evaluate. Each predicate is checked "
@@ -57,5 +60,3 @@ class CountModel(BaseComponent):
         return Count(
             predicates=[predicate.build() for predicate in self.predicates]
         )
-
-

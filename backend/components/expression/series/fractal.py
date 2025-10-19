@@ -1,13 +1,14 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -62,16 +63,17 @@ class FractalModel(BaseComponent):
     detection of structural highs/lows across different indicators.
     """
     type: Literal["Fractal"] = "Fractal"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         2,
+        ge=1,
         description="Number of bars to check on each side for a fractal. Must be ≥ 1."
     )
     output: Literal["high", "low"] = Field(
         ...,
         description="Return type: 'high' to detect peaks, 'low' to detect troughs."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series for fractal detection. Defaults to closing Price."
     )
 
@@ -81,4 +83,3 @@ class FractalModel(BaseComponent):
             output=self.output,
             series=self.series.build()
         )
-

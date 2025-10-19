@@ -1,13 +1,14 @@
 import pandas as pd
 from pydantic import Field
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression import Expression
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnyExpression
 
 
 # ==================================
@@ -25,6 +26,8 @@ class Threshold(Predicate):
     def condition(self, i: int, df: pd.DataFrame, **kwargs) -> bool:
         val1 = self.below.calculate(i, df)
         val2 = self.above.calculate(i, df)
+        if val1 is None or val2 is None:
+            return False
         return val1 < val2
 
 
@@ -40,11 +43,11 @@ class ThresholdModel(BaseComponent):
     Note: Crossover fires only at the crossing point while Threshold fires as long as below < above
     """
     type: Literal["Threshold"] = "Threshold"
-    below: "AnyExpression" = Field(
+    below: AnyExpression = Field(
         ...,
         description="Expression that must be lower (e.g. RSI)."
     )
-    above: "AnyExpression" = Field(
+    above: AnyExpression = Field(
         ...,
         description="Expression that must be higher (e.g. threshold or MA)."
     )

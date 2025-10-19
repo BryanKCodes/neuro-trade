@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -60,16 +60,19 @@ class IchimokuModel(BaseComponent):
     and trend direction.
     """
     type: Literal["Ichimoku"] = "Ichimoku"
-    tenkan: conint(ge=1) = Field(
+    tenkan: int = Field(
         9,
+        ge=1,
         description="Tenkan-sen period. Must be ≥ 1."
     )
-    kijun: conint(ge=1) = Field(
+    kijun: int = Field(
         26,
+        ge=1,
         description="Kijun-sen period. Must be ≥ 1."
     )
-    senkou: conint(ge=1) = Field(
+    senkou: int = Field(
         52,
+        ge=1,
         description="Senkou Span B period. Must be ≥ 1."
     )
     output: Literal["tenkan", "kijun", "span_a", "span_b", "chikou"] = Field(

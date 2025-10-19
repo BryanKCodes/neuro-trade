@@ -69,7 +69,6 @@ from components.predicate.actions.shifted import ShiftedModel
 from components.predicate.actions.threshold import ThresholdModel
 # Booleans
 from components.predicate.booleans.false import FalsePredicateModel
-from components.predicate.booleans.none import NonePredicateModel
 from components.predicate.booleans.true import TruePredicateModel
 # Logic
 from components.predicate.logic.and_ import AndModel
@@ -91,6 +90,16 @@ from components.predicate.signals.wick import WickModel
 # allow Pydantic to automatically figure out which schema to use
 # when parsing the JSON. This is the core of the validation system.
 
+AnySeries = Union[
+    # Dynamic Series
+    CashModel,
+    # Static Series (Indicators)
+    ADXModel, AOModel, ATRModel, BOLLModel, CCIModel, DCModel, EMAModel,
+    FractalModel, IchimokuModel, KCModel, MACDModel, MFIModel, OBVModel,
+    PriceModel, PSARModel, RSIModel, SMAModel, TrendLineModel, VortexModel,
+    WillRModel, ZigZagModel
+]
+
 AnyExpression = Union[
     # Operators
     AddModel, SubtractModel, MultiplyModel, DivideModel,
@@ -98,13 +107,10 @@ AnyExpression = Union[
     CountModel, FilterModel, StaticModel, PrevLevelModel,
     # Primitives
     NoneExpressionModel, NumberModel,
-    # Dynamic Series
-    CashModel, StopLossModel, TakeProfitModel,
-    # Static Series (Indicators)
-    ADXModel, AOModel, ATRModel, BOLLModel, CCIModel, DCModel, EMAModel,
-    FractalModel, IchimokuModel, KCModel, MACDModel, MFIModel, OBVModel,
-    PriceModel, PSARModel, RSIModel, SMAModel, TrendLineModel, VortexModel,
-    WillRModel, ZigZagModel
+    # Dynamic Variables
+    StopLossModel, TakeProfitModel,
+    # Include series
+    *AnySeries.__args__
 ]
 
 AnyPredicate = Union[
@@ -114,7 +120,7 @@ AnyPredicate = Union[
     CrossoverModel, DelayModel, FollowsModel, RepeatModel, SequenceModel,
     ShiftedModel, ThresholdModel,
     # Booleans
-    FalsePredicateModel, NonePredicateModel, TruePredicateModel,
+    FalsePredicateModel, TruePredicateModel,
     # Patterns
     CandleModel,
     # Signals
@@ -128,12 +134,12 @@ AnyPredicate = Union[
 # These are the main schemas that the AI will target. They compose all
 # the smaller components into a complete, validatable structure.
 
-class RuleModel(BaseComponent):
+class RuleModel(BaseComponent[Rule]):
     """A single, self-contained trading rule."""
     trade: Literal["long", "short"]
     filter: AnyPredicate = Field(default_factory=TruePredicateModel)
-    entry: AnyPredicate = Field(default_factory=NonePredicateModel)
-    exit: AnyPredicate = Field(default_factory=NonePredicateModel)
+    entry: AnyPredicate = Field(default_factory=FalsePredicateModel)
+    exit: AnyPredicate = Field(default_factory=FalsePredicateModel)
     stop_loss: AnyExpression = Field(default_factory=NoneExpressionModel)
     take_profit: AnyExpression = Field(default_factory=NoneExpressionModel)
     sizing: AnyExpression = Field(default_factory=NoneExpressionModel)
@@ -144,13 +150,13 @@ class RuleModel(BaseComponent):
             filter=self.filter.build(),
             entry=self.entry.build(),
             exit=self.exit.build(),
-            stop_loss=self.stop_loss.build() if self.stop_loss else None,
-            take_profit=self.take_profit.build() if self.take_profit else None,
+            stop_loss=self.stop_loss.build(),
+            take_profit=self.take_profit.build(),
             sizing=self.sizing.build()
         )
 
 
-class StrategyModel(BaseComponent):
+class StrategyModel(BaseComponent[Strategy]):
     """The root schema for a complete trading strategy, composed of one or more rules."""
     rules: List[RuleModel]
 
@@ -176,11 +182,13 @@ def rebuild_recursive_models(union_type):
                 force=True,
                 _types_namespace={
                     "AnyExpression": AnyExpression,
-                    "AnyPredicate": AnyPredicate
+                    "AnyPredicate": AnyPredicate,
+                    "AnySeries": AnySeries
                 }
             )
 
 
+rebuild_recursive_models(AnySeries)
 rebuild_recursive_models(AnyExpression)
 rebuild_recursive_models(AnyPredicate)
 

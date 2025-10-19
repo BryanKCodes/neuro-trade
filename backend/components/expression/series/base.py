@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 import pandas as pd
 from components.expression import Expression
 
@@ -12,7 +13,7 @@ class Series(Expression, ABC):
     def __init__(self, col_name: str):
         self.df = None
         self.col_name = col_name
-        self._series = None
+        self._series = pd.Series(dtype=float)
 
     @abstractmethod
     def calculator(self, df: pd.DataFrame) -> pd.Series:

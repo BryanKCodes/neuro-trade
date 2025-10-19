@@ -1,6 +1,6 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression import Expression
@@ -9,8 +9,8 @@ from components.predicate import Predicate
 
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries, AnyPredicate
 
 
 # ==================================
@@ -38,7 +38,7 @@ class PrevLevel(Expression):
                 self.count -= 1
                 if self.count <= 0:
                     return self.series.calculate(j, df)
-        raise None
+        raise ValueError("No previous level found matching the predicate condition.")
 
     def __str__(self) -> str:
         return f"PrevLevel({self.series}, {self.predicate}, {self.count})"
@@ -57,7 +57,7 @@ class PrevLevelModel(BaseComponent):
     "use the close when the last crossover happened".
     """
     type: Literal["PrevLevel"] = "PrevLevel"
-    series: AnyExpression = Field(
+    series: AnySeries = Field(
         ...,
         description="The Series to fetch values from at the time the predicate last fired true."
     )
@@ -65,8 +65,9 @@ class PrevLevelModel(BaseComponent):
         ...,
         description="Predicate whose trigger determines which point in time to look back to."
     )
-    count: conint(ge=1) = Field(
+    count: int = Field(
         1,
+        ge=1,
         description="How many predicate triggers to skip before selecting. "
                     "E.g., count=2 selects the second-most recent match."
     )

@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -50,8 +50,9 @@ class VortexModel(BaseComponent):
     upward and downward movement over a given period.
     """
     type: Literal["Vortex"] = "Vortex"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         14,
+        ge=1,
         description="Lookback period for Vortex calculation. Must be ≥ 1."
     )
     output: Literal["+vi", "-vi"] = Field(

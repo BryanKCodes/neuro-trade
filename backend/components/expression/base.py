@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 import pandas as pd
 
 from components.buildable import Buildable
@@ -11,7 +12,7 @@ class Expression(ABC, Buildable):
     """
 
     @abstractmethod
-    def calculate(self, i: int, df: pd.DataFrame, **kwargs) -> float:
+    def calculate(self, i: int, df: pd.DataFrame, **kwargs) -> Optional[float]:
         """
         Given current context, calculate a numerical price level
         :param i: Current index in DataFrame.

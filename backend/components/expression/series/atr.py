@@ -1,14 +1,15 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -52,12 +53,13 @@ class ATRModel(BaseComponent):
     for a given period.
     """
     type: Literal["ATR"] = "ATR"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         14,
+        ge=1,
         description="Number of periods for ATR calculation. Must be ≥ 1."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description=(
             "Input Series for ATR. Defaults to closing Price. "
             "Allows chaining (e.g. ATR(14, ATR(14)))."

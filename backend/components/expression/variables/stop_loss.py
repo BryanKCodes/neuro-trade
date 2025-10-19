@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Literal
+from typing import Literal, Optional
 
 from ai import BaseComponent
 from components.expression import Expression
@@ -9,7 +9,7 @@ from components.expression import Expression
 # 1. The Logic Class
 # ==================================
 class StopLoss(Expression):
-    def calculate(self, i: int, df: pd.DataFrame, **kwargs) -> float:
+    def calculate(self, i: int, df: pd.DataFrame, **kwargs) -> Optional[float]:
         return kwargs.get('stop_loss')
 
 

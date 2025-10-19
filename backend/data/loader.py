@@ -19,6 +19,9 @@ def load_yfinance_data(ticker: str, interval: str) -> pd.DataFrame:
         group_by='column'
     )
 
+    if df is None or df.empty:
+        raise ValueError(f"No data returned for {ticker} with interval {interval}")
+
     # drop multilevel index if still multiindex for safety
     if isinstance(df.columns, pd.MultiIndex):
         if 'Ticker' in df.columns.names:

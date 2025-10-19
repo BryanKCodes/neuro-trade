@@ -1,12 +1,13 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import List, Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnyPredicate
 
 
 # ==================================
@@ -76,13 +77,14 @@ class SequenceModel(BaseComponent):
     Example: "Pattern A → then crossover → then RSI overbought", all within 25 bars.
     """
     type: Literal["Sequence"] = "Sequence"
-    predicates: list["AnyPredicate"] = Field(
+    predicates: List[AnyPredicate] = Field(
         ...,
-        min_items=2,
+        min_length=2,
         description="Ordered list of predicates that must be triggered in sequence."
     )
-    max_bars_between: conint(ge=1) = Field(
+    max_bars_between: int = Field(
         25,
+        ge=1,
         description="Maximum number of bars allowed between two successive predicates. Must be ≥ 1."
     )
 

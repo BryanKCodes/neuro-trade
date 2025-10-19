@@ -1,12 +1,13 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnyPredicate
 
 
 # ==================================
@@ -26,6 +27,8 @@ class Delay(Predicate):
         if self.start is None:
             if self.predicate.condition(i, df, **kwargs):
                 self.start = i
+            else:
+                return False
         return self.start + self.delay <= i
 
 
@@ -41,12 +44,13 @@ class DelayModel(BaseComponent):
     Example: Delay(Crossover(...), delay=3) will fire 3 bars after crossover occurs.
     """
     type: Literal["Delay"] = "Delay"
-    predicate: "AnyPredicate" = Field(
+    predicate: AnyPredicate = Field(
         ...,
         description="The predicate whose signal should be delayed."
     )
-    delay: conint(ge=0) = Field(
+    delay: int = Field(
         5,
+        ge=0,
         description="Number of bars to delay after the inner predicate triggers. Must be ≥ 0."
     )
 

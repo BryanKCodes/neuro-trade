@@ -1,12 +1,13 @@
 import pandas as pd
 from pydantic import Field
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -42,7 +43,7 @@ class TrendLineModel(BaseComponent):
     series (like Fractals or Filters), filling in the gaps linearly.
     """
     type: Literal["TrendLine"] = "TrendLine"
-    series: AnyExpression = Field(
+    series: AnySeries = Field(
         ...,
         description="Sparse Series with defined pivots (non-NaN values). Interpolation fills the rest."
     )

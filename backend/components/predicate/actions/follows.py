@@ -1,12 +1,13 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnyPredicate
 
 
 # ==================================
@@ -49,16 +50,17 @@ class FollowsModel(BaseComponent):
     Example: "Crossover occurred within 5 bars, and RSI is now overbought."
     """
     type: Literal["Follows"] = "Follows"
-    first: "AnyPredicate" = Field(
+    first: AnyPredicate = Field(
         ...,
         description="The preceding predicate that must have occurred within the lookback window."
     )
-    then: "AnyPredicate" = Field(
+    then: AnyPredicate = Field(
         ...,
         description="The predicate that must be True on the current bar."
     )
-    lookback: conint(ge=1) = Field(
+    lookback: int = Field(
         5,
+        ge=1,
         description="How many bars back to search for the first event. Must be ≥ 1."
     )
 

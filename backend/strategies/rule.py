@@ -67,7 +67,7 @@ class Rule:
         context['stop_loss'] = stop_loss_price
         context['take_profit'] = take_profit_price
         # Compute position size
-        size = self.sizing.calculate(i, df, **context) if self.sizing else 1.0
+        size = self.sizing.calculate(i, df, **context) or 1.0  # Might be wrong
         if size <= 0:
             return None
 

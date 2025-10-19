@@ -1,6 +1,6 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
@@ -8,9 +8,8 @@ from components.expression.series.price import Price, PriceModel
 
 
 # --- Forward Reference for recursive models ---
-# This tells Pydantic "the type AnyExpression will exist later"
-# It's the key to preventing circular import errors.
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -45,12 +44,13 @@ class EMAModel(BaseComponent):
     to recent changes compared to a Simple Moving Average.
     """
     type: Literal["EMA"] = "EMA"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         14,
+        ge=1,
         description="Span for the EMA calculation. Must be ≥ 1."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series for EMA. Defaults to closing Price."
     )
 

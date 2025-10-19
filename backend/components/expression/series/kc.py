@@ -1,6 +1,6 @@
 import pandas as pd
 import pandas_ta as ta
-from pydantic import Field, conint
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -60,12 +60,14 @@ class KCModel(BaseComponent):
     volatility-based bands for trend analysis.
     """
     type: Literal["KC"] = "KC"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         20,
+        ge=1,
         description="EMA period for the middle band. Must be ≥ 1."
     )
-    multiplier: conint(ge=0) = Field(
+    multiplier: int = Field(
         2,
+        ge=0,
         description="ATR multiplier for band distance. Must be ≥ 0."
     )
     output: Literal["upper", "mid", "lower"] = Field(

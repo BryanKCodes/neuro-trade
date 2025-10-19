@@ -1,6 +1,6 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
@@ -8,7 +8,8 @@ from components.expression.series.price import Price, PriceModel
 
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -43,12 +44,13 @@ class SMAModel(BaseComponent):
     useful for smoothing data and identifying trends.
     """
     type: Literal["SMA"] = "SMA"
-    period: conint(ge=1) = Field(
+    period: int = Field(
         14,
+        ge=1,
         description="Number of periods to average over. Must be ≥ 1."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series to compute the SMA on. Defaults to closing price."
     )
 

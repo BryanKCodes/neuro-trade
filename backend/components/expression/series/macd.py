@@ -1,13 +1,14 @@
 import pandas as pd
-from pydantic import Field, conint, field_validator
-from typing import Literal
+from pydantic import Field, field_validator
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.expression.series.price import Price, PriceModel
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
@@ -61,24 +62,27 @@ class MACDModel(BaseComponent):
     in the strength, direction, momentum, and duration of a trend.
     """
     type: Literal["MACD"] = "MACD"
-    fast: conint(ge=1) = Field(
+    fast: int = Field(
         12,
+        ge=1,
         description="Fast EMA period. Must be ≥ 1."
     )
-    slow: conint(gt=1) = Field(
+    slow: int = Field(
         26,
+        gt=1,
         description="Slow EMA period. Must be > fast period."
     )
-    signal: conint(ge=1) = Field(
+    signal: int = Field(
         9,
+        ge=1,
         description="Signal-line EMA period. Must be ≥ 1."
     )
     output: Literal["macd", "signal", "hist"] = Field(
         "macd",
         description="Which line to output: 'macd' (MACD line), 'signal' (signal line), or 'hist' (histogram)."
     )
-    series: AnyExpression = Field(
-        default_factory=lambda: PriceModel(),
+    series: AnySeries = Field(
+        default_factory=lambda: PriceModel(output="close"),
         description="Input Series for MACD. Defaults to closing Price."
     )
 

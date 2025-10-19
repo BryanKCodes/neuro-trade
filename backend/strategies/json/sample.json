@@ -97,7 +97,7 @@
         }
       },
       "exit": {
-        "type": "NonePredicate"
+        "type": "FalsePredicate"
       }
     }
   ]

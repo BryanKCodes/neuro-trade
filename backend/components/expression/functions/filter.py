@@ -1,15 +1,15 @@
 import pandas as pd
 from pydantic import Field
 import numpy as np
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.expression.series import Series
 from components.predicate import Predicate
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
-AnyPredicate = "AnyPredicate"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries, AnyPredicate
 
 
 # ==================================
@@ -64,7 +64,7 @@ class FilterModel(BaseComponent):
     and NaN otherwise.
     """
     type: Literal["Filter"] = "Filter"
-    series: AnyExpression = Field(
+    series: AnySeries = Field(
         ...,
         description="The Series to be filtered. Only values where the predicate evaluates to True will be retained."
     )
