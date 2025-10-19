@@ -44,7 +44,7 @@ htmlcov/
 # =========================================
 
 # dependencies
-/node_modules
+/web/node_modules
 /.pnp
 .pnp.*
 .yarn/*
