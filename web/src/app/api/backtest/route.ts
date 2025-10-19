@@ -534,6 +534,5 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     // This is a placeholder for the actual backtest logic
-    console.log(request);
     return NextResponse.json(result);
 }
