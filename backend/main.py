@@ -10,8 +10,8 @@ app = FastAPI(title="NeuroTrade API")
 class BacktestRequest(BaseModel):
     asset: str
     duration: int
-    interval: str
-    initial_cash: float
+    timeframe: str
+    cash: float
     strategy: Dict[str, Any]
     benchmark: Dict[str, Any]
 
@@ -25,7 +25,7 @@ def backtest(req: BacktestRequest):
         benchmark_json=req.benchmark,
         asset=req.asset,
         duration=req.duration,
-        interval=req.interval,
-        initial_cash=req.initial_cash
+        interval=req.timeframe,
+        initial_cash=req.cash
     )
     return result

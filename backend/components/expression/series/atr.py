@@ -58,7 +58,7 @@ class ATRModel(BaseComponent):
         ge=1,
         description="Number of periods for ATR calculation. Must be ≥ 1."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description=(
             "Input Series for ATR. Defaults to closing Price. "

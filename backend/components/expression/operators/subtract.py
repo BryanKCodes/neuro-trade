@@ -43,11 +43,11 @@ class SubtractModel(BaseComponent):
     `Price - StopLoss`.
     """
     type: Literal["Subtract"] = "Subtract"
-    left: AnyExpression = Field(
+    left: "AnyExpression" = Field(
         ...,
         description="Minuend: the Expression to subtract from."
     )
-    right: AnyExpression = Field(
+    right: "AnyExpression" = Field(
         ...,
         description="Subtrahend: the Expression to subtract."
     )

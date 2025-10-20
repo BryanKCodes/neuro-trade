@@ -59,7 +59,7 @@ export async function POST(req: Request) {
           },
           right: { type: "ATR", period: 14 },
         },
-        exit: { type: "NonePredicate" },
+        exit: { type: "FalsePredicate" },
       },
     ],
   };

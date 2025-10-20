@@ -186,7 +186,7 @@
     },
     {
       "symbol": "ACCL",
-      "name": "Acco Group Holdings Limited - Ordinary Shares "
+      "name": "Acco Group Holdings Limited - Ordinary Shares"
     },
     {
       "symbol": "ACDC",
@@ -1037,6 +1037,10 @@
       "name": "Aemetis, Inc - Common Stock"
     },
     {
+      "symbol": "AMUN",
+      "name": "abrdn Ultra Short Municipal Income Active ETF"
+    },
+    {
       "symbol": "AMUU",
       "name": "Direxion Daily AMD Bull 2X Shares"
     },
@@ -1435,6 +1439,10 @@
     {
       "symbol": "ASBPW",
       "name": "Aspire Biopharma Holdings, Inc.  - Warrant"
+    },
+    {
+      "symbol": "ASCI",
+      "name": "abrdn International Small Cap Active ETF"
     },
     {
       "symbol": "ASET",
@@ -8081,6 +8089,14 @@
       "name": "Ferroglobe PLC - Ordinary Shares"
     },
     {
+      "symbol": "GSRF",
+      "name": "GSR IV Acquisition Corp. - Class A ordinary share"
+    },
+    {
+      "symbol": "GSRFR",
+      "name": "GSR IV Acquisition Corp. - Rights"
+    },
+    {
       "symbol": "GSRFU",
       "name": "GSR IV Acquisition Corp. - Units"
     },
@@ -8503,6 +8519,10 @@
     {
       "symbol": "HONE",
       "name": "HarborOne Bancorp, Inc. - Common Stock"
+    },
+    {
+      "symbol": "HONIV",
+      "name": "Honeywell International Inc. - Common Stock Ex Distribution When Issued"
     },
     {
       "symbol": "HOOD",
@@ -17005,6 +17025,10 @@
       "name": "Sohu.com Limited  - American Depositary Shares"
     },
     {
+      "symbol": "SOLSV",
+      "name": "Solstice Advanced Materials Inc. - Common Stock When Issued"
+    },
+    {
       "symbol": "SOLT",
       "name": "2x Solana ETF"
     },
@@ -17190,11 +17214,11 @@
     },
     {
       "symbol": "SPWR",
-      "name": "Complete Solaria, Inc. - Common Stock"
+      "name": "SunPower Inc. - Common Stock"
     },
     {
       "symbol": "SPWRW",
-      "name": "Complete Solaria, Inc. - Warrant"
+      "name": "SunPower Inc. - Warrant"
     },
     {
       "symbol": "SPXD",
@@ -20470,11 +20494,11 @@
     },
     {
       "symbol": "ZOOZ",
-      "name": "ZOOZ Power Ltd. - Ordinary Shares"
+      "name": "ZOOZ Strategy Ltd. - Ordinary Shares"
     },
     {
       "symbol": "ZOOZW",
-      "name": "ZOOZ Power Ltd. - Warrant"
+      "name": "ZOOZ Strategy Ltd. - Warrant"
     },
     {
       "symbol": "ZS",
@@ -20549,7 +20573,7 @@
       "name": "Zynex, Inc. - Common Stock"
     },
     {
-      "symbol": "File Creation Time: 1017202521:31",
+      "symbol": "File Creation Time: 1020202511:01",
       "name": ""
     },
     {
@@ -23417,10 +23441,6 @@
       "name": "BlackRock Income Trust Inc. (The)"
     },
     {
-      "symbol": "BKT.R",
-      "name": "BlackRock Income Trust Inc. (The) Rights (expiring October 20, 2025) Rights"
-    },
-    {
       "symbol": "BKTI",
       "name": "BK Technologies Corporation Common Stock"
     },
@@ -23919,10 +23939,6 @@
     {
       "symbol": "BTCL",
       "name": "T-Rex 2X Long Bitcoin Daily Target ETF"
-    },
-    {
-      "symbol": "BTCM",
-      "name": "BIT Mining Limited ADS"
     },
     {
       "symbol": "BTCO",
@@ -26587,6 +26603,10 @@
     {
       "symbol": "DGIN",
       "name": "VanEck ETF Trust VanEck Digital India ETF"
+    },
+    {
+      "symbol": "DGOC",
+      "name": "First Trust Exchange-Traded Fund VIII FT Vest U.S. Equity Buffer & Digital Return ETF - October"
     },
     {
       "symbol": "DGP",
@@ -29494,15 +29514,15 @@
     },
     {
       "symbol": "FLG",
-      "name": "Flagstar Financial, Inc. Common Stock"
+      "name": "Flagstar Bank, N.A. Common Stock"
     },
     {
       "symbol": "FLG$A",
-      "name": "Flagstar Financial, Inc. Depositary shares, each representing a 1/40th interest in a share of Fixed-to-Floating Rate Series A Noncumulative Perpetual Preferred Stock"
+      "name": "Flagstar Bank, N.A. Depositary shares, each representing a 1/40th interest in a share of Fixed-to-Floating Rate Series A Noncumulative Perpetual Preferred Stock"
     },
     {
       "symbol": "FLG$U",
-      "name": "Flagstar Financial, Inc. Bifurcated Option Note Unit SecuritiES"
+      "name": "Flagstar Bank, N.A. Bifurcated Option Note Unit SecuritiES"
     },
     {
       "symbol": "FLGB",
@@ -33883,6 +33903,10 @@
     {
       "symbol": "JGH",
       "name": "Nuveen Global High Income Fund Common Shares of Beneficial Interest"
+    },
+    {
+      "symbol": "JGH.V",
+      "name": "Nuveen Global High Income Fund Rights (expiring November 20, 2025) Rights when issued"
     },
     {
       "symbol": "JGRO",
@@ -41469,10 +41493,6 @@
       "name": "Banco Santander, S.A. Sponsored ADR (Spain)"
     },
     {
-      "symbol": "SAND",
-      "name": "Sandstorm Gold Ltd. Ordinary Shares (Canada)"
-    },
-    {
       "symbol": "SAP",
       "name": "SAP  SE ADS"
     },
@@ -42359,6 +42379,10 @@
     {
       "symbol": "SKYH.W",
       "name": "Sky Harbour Group Corporation Warrants, each whole warrant exercisable for one share of Class A common stock at an exercise price of $11.50 per share"
+    },
+    {
+      "symbol": "SLAI",
+      "name": "SOLAI Limited American Depositary Shares (each representing one hundred (100) Class A Ordinary Shares)"
     },
     {
       "symbol": "SLB",
@@ -47525,5 +47549,5 @@
       "name": "IEX Test Company Test Symbol Three for IEX"
     }
   ],
-  "updated": 1760811582872
+  "updated": 1760976028413
 }

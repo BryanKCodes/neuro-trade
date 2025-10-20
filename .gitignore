@@ -57,7 +57,7 @@ htmlcov/
 /coverage
 
 # next.js
-/.next/
+/web/.next/
 /out/
 
 # production

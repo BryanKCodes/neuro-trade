@@ -49,7 +49,7 @@ class EMAModel(BaseComponent):
         ge=1,
         description="Span for the EMA calculation. Must be ≥ 1."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series for EMA. Defaults to closing Price."
     )

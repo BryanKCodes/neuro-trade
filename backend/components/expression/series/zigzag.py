@@ -82,7 +82,7 @@ class ZigZagModel(BaseComponent):
         ge=0.0,
         description="Minimum percentage move required to register a new pivot. Must be ≥ 0.0."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series to apply the ZigZag filter to. Defaults to Price('close')."
     )

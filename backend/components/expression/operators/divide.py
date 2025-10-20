@@ -42,11 +42,11 @@ class DivideModel(BaseComponent):
     Useful for building ratios or normalizing indicators.
     """
     type: Literal["Divide"] = "Divide"
-    left: AnyExpression = Field(
+    left: "AnyExpression" = Field(
         ...,
         description="Numerator of the division operation."
     )
-    right: AnyExpression = Field(
+    right: "AnyExpression" = Field(
         ...,
         description="Denominator of the division operation. Ensure it does not evaluate to zero."
     )

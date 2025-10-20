@@ -43,11 +43,11 @@ class ThresholdModel(BaseComponent):
     Note: Crossover fires only at the crossing point while Threshold fires as long as below < above
     """
     type: Literal["Threshold"] = "Threshold"
-    below: AnyExpression = Field(
+    below: "AnyExpression" = Field(
         ...,
         description="Expression that must be lower (e.g. RSI)."
     )
-    above: AnyExpression = Field(
+    above: "AnyExpression" = Field(
         ...,
         description="Expression that must be higher (e.g. threshold or MA)."
     )

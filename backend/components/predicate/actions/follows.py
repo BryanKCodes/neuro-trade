@@ -50,11 +50,11 @@ class FollowsModel(BaseComponent):
     Example: "Crossover occurred within 5 bars, and RSI is now overbought."
     """
     type: Literal["Follows"] = "Follows"
-    first: AnyPredicate = Field(
+    first: "AnyPredicate" = Field(
         ...,
         description="The preceding predicate that must have occurred within the lookback window."
     )
-    then: AnyPredicate = Field(
+    then: "AnyPredicate" = Field(
         ...,
         description="The predicate that must be True on the current bar."
     )

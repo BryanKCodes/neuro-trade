@@ -44,7 +44,7 @@ class DelayModel(BaseComponent):
     Example: Delay(Crossover(...), delay=3) will fire 3 bars after crossover occurs.
     """
     type: Literal["Delay"] = "Delay"
-    predicate: AnyPredicate = Field(
+    predicate: "AnyPredicate" = Field(
         ...,
         description="The predicate whose signal should be delayed."
     )

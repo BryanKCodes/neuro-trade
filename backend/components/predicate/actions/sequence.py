@@ -77,7 +77,7 @@ class SequenceModel(BaseComponent):
     Example: "Pattern A → then crossover → then RSI overbought", all within 25 bars.
     """
     type: Literal["Sequence"] = "Sequence"
-    predicates: List[AnyPredicate] = Field(
+    predicates: List["AnyPredicate"] = Field(
         ...,
         min_length=2,
         description="Ordered list of predicates that must be triggered in sequence."

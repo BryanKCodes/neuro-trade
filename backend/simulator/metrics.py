@@ -66,13 +66,11 @@ def calculate_metrics(
             "Annualized Return": {
                 "Strategy": f"{annualized_return:.2%}",
                 "Benchmark": f"{benchmark_annualized:.2%}" if benchmark_value is not None else "N/A"
-            },
-            "Outperformance": {
-                "Strategy vs Benchmark": f"{outperformance:.2%}" if outperformance is not None else "N/A"
             }
         },
         "Details": {
             "Trades Taken": trade_count,
+            "Outperformance": f"{outperformance:.2%}" if outperformance is not None else "N/A",
             "Volatility": f"{volatility:.2%}",
             "Sharpe Ratio": f"{sharpe:.2f}",
             "Max Drawdown": f"{max_drawdown:.2%}"

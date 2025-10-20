@@ -49,7 +49,7 @@ class CCIModel(BaseComponent):
         ge=1,
         description="Look-back period for CCI. Must be ≥ 1."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series on which to compute CCI. Defaults to closing Price."
     )

@@ -72,7 +72,7 @@ class FractalModel(BaseComponent):
         ...,
         description="Return type: 'high' to detect peaks, 'low' to detect troughs."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series for fractal detection. Defaults to closing Price."
     )
