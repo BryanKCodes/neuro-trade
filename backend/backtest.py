@@ -18,6 +18,7 @@ def run_backtest(
     """
     Run a backtest for a strategy and benchmark and return metrics + equity curves.
     """
+    print(strategy_json)
     # 1. Load data
     df = load_yfinance_data(asset, interval)
 

@@ -38,7 +38,7 @@ class NotModel(BaseComponent):
     "NOT price below SMA".
     """
     type: Literal["Not"] = "Not"
-    predicate: AnyPredicate = Field(
+    predicate: "AnyPredicate" = Field(
         ...,
         description="A single predicate to negate."
     )

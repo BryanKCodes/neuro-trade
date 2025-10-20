@@ -48,7 +48,7 @@ class RSIModel(BaseComponent):
         ge=1,
         description="Lookback period for RSI computation. Must be ≥ 1."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series to compute RSI from. Defaults to closing price."
     )

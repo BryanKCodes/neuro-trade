@@ -38,7 +38,7 @@ class AndModel(BaseComponent):
     such as "RSI is overbought AND price above EMA".
     """
     type: Literal["And"] = "And"
-    predicates: list[AnyPredicate] = Field(
+    predicates: list["AnyPredicate"] = Field(
         ...,
         description="List of predicate objects that must all evaluate to True."
     )

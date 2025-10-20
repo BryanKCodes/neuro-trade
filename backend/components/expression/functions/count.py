@@ -47,7 +47,7 @@ class CountModel(BaseComponent):
     to dynamically scale risk based on number of confluences.
     """
     type: Literal["Count"] = "Count"
-    predicates: List[AnyPredicate] = Field(
+    predicates: List["AnyPredicate"] = Field(
         ...,
         description=(
             "List of predicates to evaluate. Each predicate is checked "

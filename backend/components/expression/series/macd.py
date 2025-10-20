@@ -81,7 +81,7 @@ class MACDModel(BaseComponent):
         "macd",
         description="Which line to output: 'macd' (MACD line), 'signal' (signal line), or 'hist' (histogram)."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series for MACD. Defaults to closing Price."
     )

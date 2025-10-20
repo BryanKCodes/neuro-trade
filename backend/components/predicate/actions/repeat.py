@@ -50,7 +50,7 @@ class RepeatModel(BaseComponent):
     Example: "RSI < 30 at least 3 times in last 7 bars."
     """
     type: Literal["Repeat"] = "Repeat"
-    predicate: AnyPredicate = Field(
+    predicate: "AnyPredicate" = Field(
         ...,
         description="Predicate to check multiple times over the lookback window."
     )

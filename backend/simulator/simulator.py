@@ -28,7 +28,7 @@ class Simulator:
 
     def run(self) -> None:
         self.df["Cash"] = np.full(len(self.df), self._portfolio_value)
-        cash_series = self.df["Cash"].values
+        cash_series = self.df["Cash"].to_numpy(copy=True)
 
         for i in range(self._start_index, len(self.df)):
             candle = Candle(i, self.df)

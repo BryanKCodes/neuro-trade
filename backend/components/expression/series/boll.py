@@ -70,7 +70,7 @@ class BOLLModel(BaseComponent):
         "mid",
         description="Which band to return: 'upper', 'mid', or 'lower'. Defaults to 'mid'"
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description=(
             "Input Series for band calculation (defaults to Price). "

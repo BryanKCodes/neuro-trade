@@ -57,11 +57,11 @@ class PrevLevelModel(BaseComponent):
     "use the close when the last crossover happened".
     """
     type: Literal["PrevLevel"] = "PrevLevel"
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         ...,
         description="The Series to fetch values from at the time the predicate last fired true."
     )
-    predicate: AnyPredicate = Field(
+    predicate: "AnyPredicate" = Field(
         ...,
         description="Predicate whose trigger determines which point in time to look back to."
     )

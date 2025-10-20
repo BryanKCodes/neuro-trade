@@ -40,7 +40,7 @@ class ShiftedModel(BaseComponent):
     Example: "Was RSI overbought 5 bars ago?"
     """
     type: Literal["Shifted"] = "Shifted"
-    predicate: AnyPredicate = Field(
+    predicate: "AnyPredicate" = Field(
         ...,
         description="Predicate to evaluate in the past."
     )

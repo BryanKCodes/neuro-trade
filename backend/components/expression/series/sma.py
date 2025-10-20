@@ -49,7 +49,7 @@ class SMAModel(BaseComponent):
         ge=1,
         description="Number of periods to average over. Must be ≥ 1."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Input Series to compute the SMA on. Defaults to closing price."
     )

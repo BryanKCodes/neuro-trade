@@ -38,7 +38,7 @@ class OrModel(BaseComponent):
     "RSI overbought OR MACD crossover".
     """
     type: Literal["Or"] = "Or"
-    predicates: list[AnyPredicate] = Field(
+    predicates: list["AnyPredicate"] = Field(
         ...,
         description="List of predicate objects; at least one must evaluate to True."
     )

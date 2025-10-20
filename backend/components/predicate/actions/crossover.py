@@ -71,11 +71,11 @@ class CrossoverModel(BaseComponent):
     - 'any'    → True on any cross (either direction).
     """
     type: Literal["Crossover"] = "Crossover"
-    first: AnyExpression = Field(
+    first: "AnyExpression" = Field(
         ...,
         description="The first expression (e.g. fast MA). Often the faster-moving series."
     )
-    second: AnyExpression = Field(
+    second: "AnyExpression" = Field(
         ...,
         description="The second expression (e.g. slow MA). Often the slower-moving series."
     )

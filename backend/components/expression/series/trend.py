@@ -43,7 +43,7 @@ class TrendLineModel(BaseComponent):
     series (like Fractals or Filters), filling in the gaps linearly.
     """
     type: Literal["TrendLine"] = "TrendLine"
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         ...,
         description="Sparse Series with defined pivots (non-NaN values). Interpolation fills the rest."
     )

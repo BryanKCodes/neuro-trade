@@ -41,11 +41,11 @@ class MultiplyModel(BaseComponent):
     Often used to scale indicator outputs, e.g. multiplying ATR by 1.5.
     """
     type: Literal["Multiply"] = "Multiply"
-    left: AnyExpression = Field(
+    left: "AnyExpression" = Field(
         ...,
         description="Left-hand side of the multiplication operation."
     )
-    right: AnyExpression = Field(
+    right: "AnyExpression" = Field(
         ...,
         description="Right-hand side of the multiplication operation."
     )

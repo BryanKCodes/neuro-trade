@@ -61,7 +61,7 @@ class StaticModel(BaseComponent):
         Subtract(Price(), Multiply(Number(0.05), ATR()))  # recalculates with every bar
     """
     type: Literal["Static"] = "Static"
-    expression: AnyExpression = Field(
+    expression: "AnyExpression" = Field(
         ...,
         description="The inner expression to evaluate and memoize on trade creation."
     )

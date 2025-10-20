@@ -40,11 +40,11 @@ class AddModel(BaseComponent):
     Can combine static numbers, indicators, or even other operators.
     """
     type: Literal["Add"] = "Add"
-    left: AnyExpression = Field(
+    left: "AnyExpression" = Field(
         ...,
         description="Left-hand side of the addition operation."
     )
-    right: AnyExpression = Field(
+    right: "AnyExpression" = Field(
         ...,
         description="Right-hand side of the addition operation."
     )

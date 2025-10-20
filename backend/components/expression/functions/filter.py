@@ -64,11 +64,11 @@ class FilterModel(BaseComponent):
     and NaN otherwise.
     """
     type: Literal["Filter"] = "Filter"
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         ...,
         description="The Series to be filtered. Only values where the predicate evaluates to True will be retained."
     )
-    predicate: AnyPredicate = Field(
+    predicate: "AnyPredicate" = Field(
         ...,
         description="Predicate to apply as a boolean filter. Determines which values from the series are kept."
     )

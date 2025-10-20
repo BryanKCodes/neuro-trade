@@ -51,7 +51,7 @@ class WillRModel(BaseComponent):
         ge=1,
         description="Lookback period for the Williams %R. Must be ≥ 1."
     )
-    series: AnySeries = Field(
+    series: "AnySeries" = Field(
         default_factory=lambda: PriceModel(output="close"),
         description="Series to compute %R from. Defaults to closing price."
     )

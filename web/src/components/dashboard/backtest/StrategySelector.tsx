@@ -21,25 +21,28 @@ const StrategySelector = forwardRef<StrategySelectorHandle>((props, ref) => {
   const [benchmark, setBenchmark] = useState<Strategy | null>(
     strategiesData.strategies[0]
   );
-  const [currentStrategyJson, setCurrentStrategyJson] = useState<any | null>(null);
-
-  // Load current strategy from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("currentStrategy");
-    if (saved) {
-      try {
-        setCurrentStrategyJson(JSON.parse(saved));
-      } catch {
-        setCurrentStrategyJson(null);
-      }
-    }
-  }, [strategy]);
 
   useImperativeHandle(ref, () => ({
-    getData: () => ({
-      strategy: currentStrategyJson,
-      benchmark: benchmark?.json,
-    }),
+    getData: () => {
+      let strategyJson: any | null = null;
+
+      if (strategy === "Current") {
+        try {
+          const saved = localStorage.getItem("currentStrategy");
+          if (saved) strategyJson = JSON.parse(saved);
+        } catch {
+          strategyJson = null;
+        }
+      } else {
+        // In future: handle user-saved strategies here
+        strategyJson = null;
+      }
+
+      return {
+        strategy: strategyJson,
+        benchmark: benchmark?.json || null,
+      };
+    },
   }));
 
   return (
