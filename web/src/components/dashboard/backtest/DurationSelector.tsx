@@ -8,6 +8,7 @@ import {
 } from "react";
 import { FiClock } from "react-icons/fi";
 import clsx from "clsx";
+import Dropdown from "@/components/dashboard/backtest/Dropdown";
 
 export type DurationSelectorHandle = {
   /** Returns integer total days */
@@ -64,22 +65,22 @@ const DurationSelector = forwardRef(function DurationSelector(
     setValue(String(clampedValue));
   };
 
-  const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newUnit = e.target.value as Unit;
+  const handleUnitChange = (item: string) => {
+    const newUnit = item as Unit;
 
     // Convert current value to total days first
     let totalDays = Number(value) * unitToDays[unit];
     if (totalDays > MAX_DAYS) totalDays = MAX_DAYS;
 
     // Then convert total days to new unit and round
-    const newValue = Math.round(totalDays / unitToDays[newUnit]);
+    const newValue = Math.max(1, Math.round(totalDays / unitToDays[newUnit]));
 
     setUnit(newUnit);
     setValue(String(newValue));
   };
 
   return (
-    <div className="flex items-center text-sm text-black dark:text-white">
+    <div className="flex h-full items-center text-sm text-black dark:text-white">
       {/* Icon + Number */}
       <div
         className={clsx(
@@ -104,23 +105,11 @@ const DurationSelector = forwardRef(function DurationSelector(
       </div>
 
       {/* Dropdown */}
-      <div
-        className={clsx(
-          "ml-1 px-1 py-2 rounded-md",
-          "hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
-        )}
-      >
-        <select
-          value={unit}
-          onChange={handleUnitChange}
-          className="bg-transparent focus:outline-none text-black dark:text-white"
-        >
-          <option value="days">days</option>
-          <option value="weeks">weeks</option>
-          <option value="months">months</option>
-          <option value="years">years</option>
-        </select>
-      </div>
+      <Dropdown
+        selected={unit}
+        onSelect={handleUnitChange}
+        items={["days", "weeks", "months", "years"]}
+      />
     </div>
   );
 });
