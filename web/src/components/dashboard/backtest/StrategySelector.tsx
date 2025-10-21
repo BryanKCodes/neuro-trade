@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { AiOutlineLineChart } from "react-icons/ai";
+import Dropdown from "@/components/dashboard/backtest/Dropdown";
 import strategiesData from "@/data/strategies.json";
 
 export type StrategySelectorHandle = {
@@ -46,34 +47,25 @@ const StrategySelector = forwardRef<StrategySelectorHandle>((props, ref) => {
   }));
 
   return (
-    <div className="flex items-center gap-1">
-      <AiOutlineLineChart className="w-4 h-4 text-inherit" />
+    <div className="flex h-full items-center gap-1 text-sm">
+      <AiOutlineLineChart className="w-4 h-4 text-inherit mr-1" />
       {/* Left dropdown */}
-      <select
-        value={strategy || ""}
-        onChange={(e) => setStrategy(e.target.value || null)}
-        className="bg-transparent px-1 py-0 text-sm focus:outline-none"
-      >
-        <option value="Current">Current</option>
-      </select>
-      <span className="font-semibold">vs</span>
+      <Dropdown
+        selected={strategy || ""}
+        onSelect={(value) => setStrategy(value)}
+        items={["Current"]}
+        renderLabel={(v) => v}
+      />
+
+      <span className="font-semibold px-1">vs</span>
+
       {/* Right dropdown */}
-      <select
-        value={benchmark?.name}
-        onChange={(e) => {
-          const selected = strategiesData.strategies.find(
-            (s: Strategy) => s.name === e.target.value
-          );
-          setBenchmark(selected || null);
-        }}
-        className="bg-transparent px-1 py-0 text-sm focus:outline-none"
-      >
-        {strategiesData.strategies.map((s: Strategy) => (
-          <option key={s.name} value={s.name}>
-            {s.name}
-          </option>
-        ))}
-      </select>
+      <Dropdown
+        selected={benchmark?.name || ""}
+        onSelect={(value) => setBenchmark(strategiesData.strategies.find((s: Strategy) => s.name === value) || null)}
+        items={strategiesData.strategies.map((s: Strategy) => s.name)}
+        renderLabel={(v) => v}
+      />
     </div>
   );
 });
