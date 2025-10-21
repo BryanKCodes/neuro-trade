@@ -9,6 +9,7 @@ import {
 } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import clsx from "clsx";
+import Dropdown from "@/components/dashboard/backtest/Dropdown";
 
 export type TimeframeSelectorHandle = {
   getData: () => string;
@@ -20,7 +21,6 @@ const SHORTHANDS: Record<string, string> = {
   "5m": "5m",
   "15m": "15m",
   "30m": "30m",
-  "60m": "1h",
   "90m": "1.5h",
   "1h": "1h",
   "1d": "D",
@@ -36,7 +36,6 @@ const LABELS: Record<string, string> = {
   "5m": "5 minutes",
   "15m": "15 minutes",
   "30m": "30 minutes",
-  "60m": "1 hour",
   "90m": "1.5 hours",
   "1h": "1 hour",
   "1d": "1 day",
@@ -48,7 +47,7 @@ const LABELS: Record<string, string> = {
 
 const GROUPS = {
   MINUTES: ["1m", "2m", "5m", "15m", "30m"],
-  HOURS: ["60m", "90m", "1h"],
+  HOURS: ["90m", "1h"],
   DAYS: ["1d", "5d", "1wk"],
   MONTHS: ["1mo", "3mo"],
 };
@@ -120,46 +119,13 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
         </button>
 
         {/* Dropdown */}
-        <div className="relative h-full" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center justify-center px-1 h-full rounded-md transition-colors
-                        bg-transparent hover:bg-gray-200 dark:hover:bg-neutral-800"
-          >
-            <FiChevronDown className="w-4 h-4" />
-          </button>
-
-          {dropdownOpen && (
-            <div
-              className="absolute z-1 right-0 mt-2 w-40 max-h-64 overflow-auto rounded-md 
-                            border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 
-                            shadow-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 
-                            scrollbar-track-transparent"
-            >
-              {Object.entries(GROUPS).map(([group, list]) => (
-                <div key={group} className="px-2 py-1">
-                  <div className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
-                    {group}
-                  </div>
-                  {list.map((tf) => (
-                    <div
-                      key={tf}
-                      onClick={() => handleDropdownSelect(tf)}
-                      className={clsx(
-                        "px-3 py-1 rounded-md text-sm cursor-pointer",
-                        "hover:bg-gray-200 dark:hover:bg-neutral-800",
-                        selected === tf &&
-                        "bg-gray-300 dark:bg-neutral-600 font-medium text-black dark:text-white"
-                      )}
-                    >
-                      {LABELS[tf] ?? tf}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <Dropdown
+          buttonLabel={null}
+          selected={selected}
+          onSelect={handleDropdownSelect}
+          categories={GROUPS}
+          renderLabel={(tf) => LABELS[tf] ?? tf}
+        />
       </div>
     );
   }
