@@ -625,6 +625,10 @@
       "name": "Akso Health Group - American Depositary Shares"
     },
     {
+      "symbol": "AHMA",
+      "name": "Ambitions Enterprise Management Co. L.L.C - Class A Ordinary Shares"
+    },
+    {
       "symbol": "AIA",
       "name": "iShares Asia 50 ETF"
     },
@@ -1445,10 +1449,6 @@
       "name": "abrdn International Small Cap Active ETF"
     },
     {
-      "symbol": "ASET",
-      "name": "FlexShares Real Assets Allocation Index Fund"
-    },
-    {
       "symbol": "ASLE",
       "name": "AerSale Corporation - Common Stock"
     },
@@ -2045,6 +2045,10 @@
       "name": "Barrett Business Services, Inc. - Common Stock"
     },
     {
+      "symbol": "BBYY",
+      "name": "GraniteShares YieldBOOST BABA ETF"
+    },
+    {
       "symbol": "BCAB",
       "name": "BioAtla, Inc. - Common Stock"
     },
@@ -2263,6 +2267,10 @@
     {
       "symbol": "BGC",
       "name": "BGC Group, Inc. - Class A Common Stock"
+    },
+    {
+      "symbol": "BGIN",
+      "name": "Bgin Blockchain Limited - Class A Ordinary Shares"
     },
     {
       "symbol": "BGL",
@@ -6459,6 +6467,10 @@
     {
       "symbol": "FBYDW",
       "name": "Falcon's Beyond Global, Inc. - Warrants"
+    },
+    {
+      "symbol": "FBYY",
+      "name": "GraniteShares YieldBOOST META ETF"
     },
     {
       "symbol": "FCA",
@@ -11407,6 +11419,10 @@
     {
       "symbol": "MCSE",
       "name": "Franklin Sustainable International Equity ETF"
+    },
+    {
+      "symbol": "MCTA",
+      "name": "Charming Medical Limited - Class A Ordinary Shares"
     },
     {
       "symbol": "MCTR",
@@ -16870,7 +16886,7 @@
     },
     {
       "symbol": "SMX",
-      "name": "SMX (Security Matters) Public Limited Company - Class A Ordinary Shares"
+      "name": "SMX (Security Matters) Public Limited Company - Ordinary Shares"
     },
     {
       "symbol": "SMXT",
@@ -17579,22 +17595,6 @@
     {
       "symbol": "SVCO",
       "name": "Silvaco Group, Inc. - Common Stock"
-    },
-    {
-      "symbol": "SVII",
-      "name": "Spring Valley Acquisition Corp. II - Class A Ordinary Shares"
-    },
-    {
-      "symbol": "SVIIR",
-      "name": "Spring Valley Acquisition Corp. II - Rights"
-    },
-    {
-      "symbol": "SVIIU",
-      "name": "Spring Valley Acquisition Corp. II - Units"
-    },
-    {
-      "symbol": "SVIIW",
-      "name": "Spring Valley Acquisition Corp. II - Warrant"
     },
     {
       "symbol": "SVRA",
@@ -19117,10 +19117,6 @@
       "name": "VersaBank - Common Shares"
     },
     {
-      "symbol": "VBTX",
-      "name": "Veritex Holdings, Inc. - Common Stock"
-    },
-    {
       "symbol": "VC",
       "name": "Visteon Corporation - Common Stock"
     },
@@ -19347,6 +19343,10 @@
     {
       "symbol": "VMEO",
       "name": "Vimeo, Inc. - Common Stock"
+    },
+    {
+      "symbol": "VNCE",
+      "name": "Vince Holding Corp. - Common Stock"
     },
     {
       "symbol": "VNDA",
@@ -20441,10 +20441,6 @@
       "name": "Zenta Group Company Limited - Ordinary Shares"
     },
     {
-      "symbol": "ZIMV",
-      "name": "ZimVie Inc. - Common Stock"
-    },
-    {
       "symbol": "ZION",
       "name": "Zions Bancorporation N.A. - Common Stock"
     },
@@ -20573,7 +20569,7 @@
       "name": "Zynex, Inc. - Common Stock"
     },
     {
-      "symbol": "File Creation Time: 1020202511:01",
+      "symbol": "File Creation Time: 1021202512:11",
       "name": ""
     },
     {
@@ -26914,7 +26910,7 @@
     },
     {
       "symbol": "DNL",
-      "name": "WisdomTree Global ex-US Quality Dividend Growth Fund"
+      "name": "WisdomTree Global ex-U.S. Quality Growth Fund"
     },
     {
       "symbol": "DNN",
@@ -26966,7 +26962,7 @@
     },
     {
       "symbol": "DOL",
-      "name": "WisdomTree International LargeCap Dividend Fund"
+      "name": "WisdomTree True Developed International Fund"
     },
     {
       "symbol": "DOLE",
@@ -33273,6 +33269,10 @@
       "name": "Ingersoll Rand Inc. Common Stock"
     },
     {
+      "symbol": "IRE",
+      "name": "Tidal Trust II Defiance Daily Target 2X Long IREN ETF"
+    },
+    {
       "symbol": "IRET",
       "name": "Tidal Trust II iREIT - MarketVector Quality REIT Index ETF"
     },
@@ -36455,6 +36455,10 @@
     {
       "symbol": "MPC",
       "name": "Marathon Petroleum Corporation Common Stock"
+    },
+    {
+      "symbol": "MPL",
+      "name": "Tidal Trust II Defiance Daily Target 2X Long MP ETF"
     },
     {
       "symbol": "MPLX",
@@ -40321,6 +40325,10 @@
       "name": "Restaurant Brands International Inc. Common Shares"
     },
     {
+      "symbol": "QSU",
+      "name": "Tidal Trust II Defiance Daily Target 2X Long QS ETF"
+    },
+    {
       "symbol": "QTAP",
       "name": "Innovator Growth Accelerated Plus ETF - April"
     },
@@ -41073,10 +41081,6 @@
       "name": "EA Series Trust Coastal Compass 100 ETF"
     },
     {
-      "symbol": "RORO",
-      "name": "ATAC US Rotation ETF"
-    },
-    {
       "symbol": "ROSC",
       "name": "Hartford Multifactor Small Cap ETF"
     },
@@ -41603,6 +41607,10 @@
     {
       "symbol": "SBSW",
       "name": "D/B/A Sibanye-Stillwater Limited ADS"
+    },
+    {
+      "symbol": "SBTU",
+      "name": "ETF Opportunities Trust T-REX 2X Long SBET Daily Target ETF"
     },
     {
       "symbol": "SBXD",
@@ -45841,10 +45849,6 @@
       "name": "Global X Funds Global X MSCI Vietnam ETF"
     },
     {
-      "symbol": "VNCE",
-      "name": "Vince Holding Corp. Common Stock"
-    },
-    {
       "symbol": "VNIE",
       "name": "The Advisors Inner Circle Fund II Vontobel International Equity Active ETF"
     },
@@ -47549,5 +47553,5 @@
       "name": "IEX Test Company Test Symbol Three for IEX"
     }
   ],
-  "updated": 1760976028413
+  "updated": 1761063410976
 }

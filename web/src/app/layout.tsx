@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ModalProvider } from "@/contexts/ModalContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 export const metadata = {
   title: "My Web App",
@@ -17,9 +18,11 @@ const RootLayout = ({ children }: RootLayoutProps) => {
     <html lang="en">
       <body>
         <AuthProvider>
-          <ModalProvider>
-            {children}
-          </ModalProvider>
+          <UserProvider>
+            <ModalProvider>
+              {children}
+            </ModalProvider>
+          </UserProvider>
         </AuthProvider>
       </body>
     </html>
