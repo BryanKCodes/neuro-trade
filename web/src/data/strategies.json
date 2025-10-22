@@ -36,6 +36,105 @@
           }
         ]
       }
+    },
+    {
+      "name": "SMA Crossover",
+      "json": {
+        "rules": [
+          {
+            "trade": "long",
+            "filter": {
+              "type": "TruePredicate"
+            },
+            "entry": {
+              "type": "Crossover",
+              "first": {
+                "type": "SMA",
+                "period": 20
+              },
+              "second": {
+                "type": "SMA",
+                "period": 50
+              },
+              "direction": "above"
+            },
+            "exit": {
+              "type": "Crossover",
+              "first": {
+                "type": "SMA",
+                "period": 20
+              },
+              "second": {
+                "type": "SMA",
+                "period": 50
+              },
+              "direction": "below"
+            },
+            "stop_loss": {
+              "type": "NoneExpression"
+            },
+            "take_profit": {
+              "type": "NoneExpression"
+            },
+            "sizing": {
+              "type": "Divide",
+              "left": {
+                "type": "Cash"
+              },
+              "right": {
+                "type": "Price",
+                "output": "close"
+              }
+            }
+          },
+          {
+            "trade": "short",
+            "filter": {
+              "type": "TruePredicate"
+            },
+            "entry": {
+              "type": "Crossover",
+              "first": {
+                "type": "SMA",
+                "period": 20
+              },
+              "second": {
+                "type": "SMA",
+                "period": 50
+              },
+              "direction": "below"
+            },
+            "exit": {
+              "type": "Crossover",
+              "first": {
+                "type": "SMA",
+                "period": 20
+              },
+              "second": {
+                "type": "SMA",
+                "period": 50
+              },
+              "direction": "above"
+            },
+            "stop_loss": {
+              "type": "NoneExpression"
+            },
+            "take_profit": {
+              "type": "NoneExpression"
+            },
+            "sizing": {
+              "type": "Divide",
+              "left": {
+                "type": "Cash"
+              },
+              "right": {
+                "type": "Price",
+                "output": "close"
+              }
+            }
+          }
+        ]
+      }
     }
   ]
 }

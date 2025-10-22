@@ -106,7 +106,7 @@ def generate_prompt():
     # ===================================================================
     # 4. Add Example Strategy
     # ===================================================================
-    with open('../strategies/json/sample.json', 'r') as file:
+    with open('strategies/json/sample.json', 'r') as file:
         example = json.load(file)
 
     prompt.append("\n### Example JSON Strategy\n")
