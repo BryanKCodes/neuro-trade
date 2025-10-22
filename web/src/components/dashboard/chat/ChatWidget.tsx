@@ -1,23 +1,37 @@
 import { useState, useRef, useEffect } from "react";
-import { IoSend } from "react-icons/io5";
+import { HiOutlineLightBulb } from "react-icons/hi2";
+import { PiGraph } from "react-icons/pi";
 import Message from "@/components/dashboard/chat/Message";
+import SendButton from "@/components/dashboard/chat/SendButton";
+import { Tool } from "@/components/dashboard/chat/Dropdown";
+import ToolBar from "@/components/dashboard/chat/ToolBar";
 
-export default function ChatWidget() {
+const AVAILABLE_TOOLS: Tool[] = [
+  {
+    name: "Thinking",
+    icon: <HiOutlineLightBulb className="w-4 h-4" />,
+    description: "Think longer",
+  },
+  {
+    name: "Strategy",
+    icon: <PiGraph className="w-4 h-4" />,
+    description: "Generate a backtest strategy",
+  },
+]
+
+const ChatWidget = () => {
   const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
   const [input, setInput] = useState("");
-  const [inputHeight, setInputHeight] = useState(40);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Effect to auto-resize the textarea based on content
   useEffect(() => {
     if (textareaRef.current) {
-      // Temporarily reset height to auto to get the new scrollHeight
       textareaRef.current.style.height = "auto";
-      // Cap the height at 120px, otherwise use the content's height
       const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
-      setInputHeight(newHeight);
-      // Apply the new calculated height
       textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [input]);
@@ -28,6 +42,17 @@ export default function ChatWidget() {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Toolbar handlers
+  const handleToolSelect = (tool: string) => {
+    if (!selectedTools.includes(tool)) {
+      setSelectedTools((prev) => [...prev, tool]);
+    }
+  };
+
+  const handleToolDeselect = (tool: string) => {
+    setSelectedTools((prev) => prev.filter((t) => t !== tool));
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -63,10 +88,9 @@ export default function ChatWidget() {
     }
   };
 
-  // Allow sending with Enter key, but Shift+Enter for a new line
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // Prevent new line on Enter
+      e.preventDefault();
       handleSend();
     }
   };
@@ -89,7 +113,7 @@ export default function ChatWidget() {
       </div>
 
       {/* Input bar */}
-      <div className="bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl px-3 py-2 flex flex-col">
+      <div className="bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl px-3 py-2 flex flex-col">
         <textarea
           ref={textareaRef}
           value={input}
@@ -97,25 +121,29 @@ export default function ChatWidget() {
           onKeyDown={handleKeyPress}
           placeholder="Describe your trading strategy"
           rows={1}
-          className="resize-none overflow-y-auto max-h-[120px] bg-transparent text-m 
+          className="w-full resize-none overflow-y-auto max-h-[120px] bg-transparent text-m 
              text-black dark:text-white placeholder-gray-500 dark:placeholder-neutral-400 
              focus:outline-none scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 
              scrollbar-track-transparent"
-          style={{ height: inputHeight }}
+          style={{ height: `${Math.max(textareaRef.current?.scrollHeight || 0, 40)}px` }}
         />
-
-        <button
-          onClick={handleSend}
-          disabled={!input.trim()}
-          className="mt-2 self-end w-9 h-9 rounded-full flex items-center justify-center transition-colors
-                        bg-blue-500 text-white hover:bg-blue-600 
-                        dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600
-                        disabled:bg-gray-200 dark:disabled:bg-neutral-700/50 disabled:cursor-not-allowed"
-          aria-label="Send message"
-        >
-          <IoSend className="w-4 h-4" />
-        </button>
+        
+        {/* Toolbar and Send button */}
+        <div className="mt-5 flex items-end justify-between">
+          <ToolBar
+            availableTools={AVAILABLE_TOOLS}
+            selectedTools={selectedTools}
+            onToolSelect={handleToolSelect}
+            onToolDeselect={handleToolDeselect}
+          />
+          <SendButton
+            onClick={handleSend}
+            disabled={!input.trim()}
+          />
+        </div>
       </div>
     </div>
   );
 }
+
+export default ChatWidget;
