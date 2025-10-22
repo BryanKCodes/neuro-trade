@@ -12,6 +12,5 @@ export async function POST(request: Request) {
   });
 
   const data = await res.json();
-  console.log("Backtest response data:", data);
   return NextResponse.json(data);
 }

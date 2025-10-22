@@ -113,9 +113,3 @@ def generate_prompt():
     prompt.append(json.dumps(example, indent=2))
 
     return "".join(prompt)
-
-
-if __name__ == "__main__":
-    print(generate_prompt())
-
-
