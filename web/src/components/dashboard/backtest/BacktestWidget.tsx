@@ -8,6 +8,7 @@ import TimeframeSelector, { TimeframeSelectorHandle } from "@/components/dashboa
 import DurationSelector, { DurationSelectorHandle } from "@/components/dashboard/backtest/DurationSelector";
 import CashSelector, { CashSelectorHandle } from "@/components/dashboard/backtest/CashSelector";
 import StrategySelector, { StrategySelectorHandle } from "@/components/dashboard/backtest/StrategySelector";
+import Chart, { ChartHandle } from "@/components/dashboard/backtest/Chart";
 import Metrics, { MetricsHandle } from "@/components/dashboard/backtest/Metrics";
 
 const BacktestWidget = () => {
@@ -16,6 +17,7 @@ const BacktestWidget = () => {
   const durationSelectorRef = useRef<DurationSelectorHandle>(null);
   const cashSelectorRef = useRef<CashSelectorHandle>(null);
   const strategySelectorRef = useRef<StrategySelectorHandle>(null);
+  const chartRef = useRef<ChartHandle>(null);
   const metricsRef = useRef<MetricsHandle>(null);
 
   async function handleRun() {
@@ -37,6 +39,7 @@ const BacktestWidget = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
+      chartRef.current?.setData(data);
       metricsRef.current?.setData(data);
     } catch (err) {
       console.error("Backtest failed:", err);
@@ -71,7 +74,8 @@ const BacktestWidget = () => {
       <Divider isHorizontal={true} />
 
       {/* Metrics Section */}
-      <div className="flex flex-col h-[calc(100%-3.5rem)]"> {/* Adjust for top bar height */}
+      <div className="flex h-[calc(100%-2.25rem)] flex-col gap-4 p-3 min-h-0">
+        <Chart ref={chartRef} />
         <Metrics ref={metricsRef} />
       </div>
     </div>
