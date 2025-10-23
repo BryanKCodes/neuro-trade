@@ -537,6 +537,10 @@
       "name": "Allied Gaming & Entertainment Inc. - Common Stock"
     },
     {
+      "symbol": "AGCC",
+      "name": "Agencia Comercial Spirits Ltd - Class A Ordinary Share"
+    },
+    {
       "symbol": "AGEM",
       "name": "abrdn Emerging Markets Dividend Active ETF"
     },
@@ -835,6 +839,10 @@
     {
       "symbol": "ALIL",
       "name": "Argent Focused Small Cap ETF"
+    },
+    {
+      "symbol": "ALISU",
+      "name": "Calisa Acquisition Corp - Units"
     },
     {
       "symbol": "ALKS",
@@ -5869,8 +5877,12 @@
       "name": "iShares Emerging Markets Infrastructure ETF"
     },
     {
-      "symbol": "EMISU",
-      "name": "Emmis Acquisition Corp. - Units"
+      "symbol": "EMIS",
+      "name": "Emmis Acquisition Corp. - Class A Ordinary Share"
+    },
+    {
+      "symbol": "EMISR",
+      "name": "Emmis Acquisition Corp. - Rights"
     },
     {
       "symbol": "EML",
@@ -12777,6 +12789,10 @@
       "name": "Nuveen Preferred and Income ETF"
     },
     {
+      "symbol": "NPT",
+      "name": "Texxon Holding Limited - Ordinary shares"
+    },
+    {
       "symbol": "NRC",
       "name": "National Research Corporation - Common Stock"
     },
@@ -14179,10 +14195,6 @@
     {
       "symbol": "PHIO",
       "name": "Phio Pharmaceuticals Corp. - Common Stock"
-    },
-    {
-      "symbol": "PHLT",
-      "name": "Performant Healthcare, Inc. - Common Stock"
     },
     {
       "symbol": "PHO",
@@ -18862,7 +18874,7 @@
     },
     {
       "symbol": "UOKA",
-      "name": "MDJM LTD - Ordinary Shares"
+      "name": "MDJM LTD - Class A Ordinary Shares"
     },
     {
       "symbol": "UONE",
@@ -20569,7 +20581,7 @@
       "name": "Zynex, Inc. - Common Stock"
     },
     {
-      "symbol": "File Creation Time: 1021202512:11",
+      "symbol": "File Creation Time: 1022202521:31",
       "name": ""
     },
     {
@@ -23793,12 +23805,20 @@
       "name": "BRC Inc. Class A Common Stock"
     },
     {
+      "symbol": "BRCE",
+      "name": "MFS Active Exchange Traded Funds Trust MFS Blended Research Core Equity ETF"
+    },
+    {
       "symbol": "BRF",
       "name": "VanEck Brazil Small-Cap ETF"
     },
     {
       "symbol": "BRIA",
       "name": "BrilliA Inc Class A Ordinary Shares"
+    },
+    {
+      "symbol": "BRIE",
+      "name": "MFS Active Exchange Traded Funds Trust MFS Blended Research International Equity ETF"
     },
     {
       "symbol": "BRIF",
@@ -34837,10 +34857,6 @@
       "name": "ETF Opportunities Trust T-REX 2X Long KTOS Daily Target ETF"
     },
     {
-      "symbol": "KUKE",
-      "name": "Kuke Music Holding Limited American Depositary Shares (each representing ten (10) Class A Ordinary Shares)"
-    },
-    {
       "symbol": "KULR",
       "name": "KULR Technology Group, Inc. Common Stock"
     },
@@ -38181,6 +38197,10 @@
       "name": "ALPS - O'Shares International Developed Quality Dividend ETF"
     },
     {
+      "symbol": "OEI",
+      "name": "Listed Funds Trust Optimized Equity Income ETF"
+    },
+    {
       "symbol": "OFG",
       "name": "OFG Bancorp Common Stock"
     },
@@ -40567,6 +40587,10 @@
     {
       "symbol": "RCL",
       "name": "Royal Caribbean Cruises Ltd. Common Stock"
+    },
+    {
+      "symbol": "RCLO",
+      "name": "Advisor Managed Portfolios Reckoner BBB-B CLO ETF"
     },
     {
       "symbol": "RCS",
@@ -43915,6 +43939,14 @@
     {
       "symbol": "TEND",
       "name": "iShares Trust iShares Large Cap 10% Target Buffer Dec ETF"
+    },
+    {
+      "symbol": "TENJ",
+      "name": "iShares Trust iShares Large Cap 10% Target Buffer Jun ETF"
+    },
+    {
+      "symbol": "TENM",
+      "name": "iShares Trust iShares Large Cap 10% Target Buffer Mar ETF"
     },
     {
       "symbol": "TEO",
@@ -47553,5 +47585,5 @@
       "name": "IEX Test Company Test Symbol Three for IEX"
     }
   ],
-  "updated": 1761063410976
+  "updated": 1761198139490
 }

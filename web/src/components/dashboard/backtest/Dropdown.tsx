@@ -61,9 +61,9 @@ export default function Dropdown<T extends string | number>({
         className="flex items-center justify-center px-1 h-full rounded-md transition-colors
                     bg-transparent hover:bg-gray-200 dark:hover:bg-neutral-800"
       >
-        {displayLabel && <span>{displayLabel}</span>}
+        {displayLabel && <span className="px-1">{displayLabel}</span>}
         <FiChevronDown
-          className={clsx("w-4 h-4", displayLabel && "ml-1")}
+          className={clsx("w-4 h-4")}
         />
       </button>
 
