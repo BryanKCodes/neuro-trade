@@ -1,7 +1,97 @@
+from datetime import datetime
 from math import sqrt
 import pandas as pd
+from pyxirr import xirr
 from components.trades import Trade
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
+
+# ==============================================================================
+# Private Helper Functions
+# ==============================================================================
+
+def _calculate_periods_per_year(interval: str) -> int:
+    """Determines the number of periods per year based on data interval."""
+    if interval == "1d":
+        return 252  # Trading days in a year
+    elif interval == "1h":
+        return int(252 * 6.5)  # ~6.5 trading hours/day
+    elif interval == "5m":
+        return 252 * 78  # ~78 5-min intervals/day
+    else:
+        return 252  # Default to daily if unknown
+    
+
+def _calculate_xirr(cash_flows: List[Tuple[datetime, float]]) -> Optional[float]:
+    """Calculates the internal rate of return (XIRR) using the py-xirr library."""
+    if not cash_flows or len(cash_flows) < 2:
+        return None
+    try:
+        # Separate dates and values for the xirr function
+        dates = [cf[0] for cf in cash_flows]
+        values = [cf[1] for cf in cash_flows]
+        
+        # Ensure there's at least one positive and one negative flow
+        if not any(v > 0 for v in values) or not any(v < 0 for v in values):
+            return None
+
+        rate = xirr(dates, values)
+        return float(rate) if pd.notna(rate) else None
+        
+    except Exception:
+        # Catches potential errors if calculation fails
+        return None
+
+def _generate_mwr_curve(
+    rate: float,
+    periods: int,
+    periods_per_year: int,
+    initial_value: float
+) -> pd.Series:
+    """Generates a smooth equity curve growing at a constant annualized rate."""
+    periodic_rate = (1 + rate)**(1 / periods_per_year) - 1
+    growth_factors = [(1 + periodic_rate)**i for i in range(periods)]
+    return pd.Series(growth_factors) * initial_value
+
+
+# ==============================================================================
+# Public API Functions
+# ==============================================================================
+
+def calculate_equity_curves(
+    simple_equity_curve: pd.Series,
+    cash_flows: List[Tuple[datetime, float]],
+    interval: str = "1d"
+) -> Dict[str, List[float]]:
+    """
+    Generates a dictionary of simple, time-weighted, and money-weighted equity curves.
+    """
+    if simple_equity_curve.empty:
+        return {"simple": [], "time_weighted": [], "money_weighted": []}
+
+    initial_value = simple_equity_curve.iloc[0]
+
+    # 1. Simple Equity Curve
+    simple_curve = simple_equity_curve.copy()
+
+    # 2. Time-Weighted Curve (normalized to show growth of $1)
+    time_weighted_curve = simple_curve / initial_value
+
+    # 3. Money-Weighted Curve (hypothetical curve based on MWRR)
+    periods_per_year = _calculate_periods_per_year(interval)
+
+    mwr_rate = _calculate_xirr(cash_flows)
+    if mwr_rate is not None:
+        money_weighted_curve = _generate_mwr_curve(
+            mwr_rate, len(simple_curve), periods_per_year, initial_value
+        )
+    else:
+        money_weighted_curve = pd.Series([initial_value] * len(simple_curve))
+
+    return {
+        "simple": simple_curve.tolist(),
+        "time_weighted": time_weighted_curve.tolist(),
+        "money_weighted": money_weighted_curve.tolist()
+    }
 
 
 def calculate_metrics(
@@ -21,17 +111,7 @@ def calculate_metrics(
     """
     returns = equity_curve.pct_change().fillna(0)
 
-    # Determine periods per year based on interval
-    if interval == "1d":
-        periods_per_year = 252
-    elif interval == "1h":
-        periods_per_year = 252 * 6.5  # ~6.5 trading hours/day
-    elif interval == "5m":
-        periods_per_year = 252 * 78  # ~78 5-min bars/day
-    else:
-        print(f"[WARN] Unrecognized interval '{interval}', defaulting to 252 (daily).")
-        periods_per_year = 252
-
+    periods_per_year = _calculate_periods_per_year(interval)
     total_periods = len(equity_curve)
 
     # Metrics
