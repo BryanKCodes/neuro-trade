@@ -74,7 +74,7 @@ const BacktestWidget = () => {
       <Divider isHorizontal={true} />
 
       {/* Metrics Section */}
-      <div className="flex h-[calc(100%-2.25rem)] flex-col gap-4 p-3 min-h-0">
+      <div className="flex flex-col h-[calc(100%-3.5rem)] gap-2 mx-3">
         <Chart ref={chartRef} />
         <Metrics ref={metricsRef} />
       </div>

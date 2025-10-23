@@ -11,11 +11,16 @@ import {
   CartesianGrid,
 } from "recharts";
 import { FiBarChart2 } from "react-icons/fi";
+import Dropdown from "@/components/dashboard/backtest/Dropdown";
 
 // A specific handle for this component
 export type ChartHandle = {
   setData: (data: any) => void;
 };
+
+// Define the available return types
+type ReturnType = "Simple" | "Time-Weighted" | "Money-Weighted";
+const RETURN_TYPES: ReturnType[] = ["Simple", "Time-Weighted", "Money-Weighted"];
 
 // Utility function needed for the chart's Y-axis and tooltip
 function formatNumberAbbrev(input: any) {
@@ -65,6 +70,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 const Chart = forwardRef<ChartHandle>((_, ref) => {
   const [chartData, setChartData] = useState<any[] | null>(null);
+  const [returnType, setReturnType] = useState<ReturnType>("Simple");
 
   useImperativeHandle(ref, () => ({
     setData: (data: any) => {
@@ -82,7 +88,7 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
     // A placeholder specific to the chart
     return (
       <div className="flex flex-1 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-8 dark:from-slate-900 dark:to-slate-800">
-         <div className="text-center">
+        <div className="text-center">
           <div className="mb-4 flex justify-center">
             <div className="rounded-full bg-slate-200 p-4 dark:bg-slate-700">
               <FiBarChart2 className="h-8 w-8 text-slate-500 dark:text-slate-400" />
@@ -114,9 +120,16 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
             <div className="h-3 w-3 rounded-full bg-orange-500"></div>
             <span className="font-medium text-slate-600 dark:text-slate-400">Benchmark</span>
           </div>
+          <div className="flex items-center font-sm h-8">
+            <Dropdown
+              items={RETURN_TYPES}
+              selected={returnType}
+              onSelect={(value) => setReturnType(value as ReturnType)}
+            />
+          </div>
         </div>
       </div>
-      
+
       <div className="flex-1 px-4 pb-4 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
