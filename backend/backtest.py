@@ -4,7 +4,7 @@ from typing import Dict, Any
 from data.loader import load_yfinance_data
 from strategies.loader import build_strategy_from_model
 from simulator import Simulator
-from simulator.metrics import calculate_metrics
+from simulator.metrics import calculate_equity_curves, calculate_metrics
 
 
 def run_backtest(
@@ -34,7 +34,16 @@ def run_backtest(
     strategy_simulator.run()
     benchmark_simulator.run()
 
-    # 5. Calculate metrics
+    # 5. Calculate equity curves and metrics
+    simple_equity_curve = strategy_simulator.equity_curve
+    cash_flows = strategy_simulator.cash_flows
+
+    equity_curves = calculate_equity_curves(
+        simple_equity_curve=simple_equity_curve,
+        cash_flows=cash_flows,
+        interval=interval
+    )
+
     metrics = calculate_metrics(
         strategy_simulator.equity_curve,
         trades=strategy_simulator.trades,
@@ -44,7 +53,7 @@ def run_backtest(
 
     # 6. Return as dict
     return {
-        "equity_curve": strategy_simulator.equity_curve.tolist(),
+        "equity_curve": equity_curves,
         "benchmark_curve": benchmark_simulator.equity_curve.tolist(),
         "metrics": metrics
     }

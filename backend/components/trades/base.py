@@ -74,15 +74,6 @@ class Trade(ABC):
         """
         pass
 
-    def is_ambiguous_candle(self, candle: Candle) -> bool:
-        """
-        Check if it is unclear if stop loss or take profit is hit first within the candle
-
-        :param candle: Current market candle of the underlying asset.
-        :return: If it is unknown if stop loss or take profit was executed first
-        """
-        return self.is_stop_loss_hit(candle) and self.is_take_profit_hit(candle)
-
     @abstractmethod
     def pnl(self) -> Optional[float]:
         """
@@ -135,11 +126,11 @@ class Trade(ABC):
         return self._rule
 
     @property
-    def stop_loss(self) -> float:
+    def stop_loss(self) -> Callable[[int], Optional[float]]:
         return self._stop_loss
 
     @property
-    def take_profit(self) -> float:
+    def take_profit(self) -> Callable[[int], Optional[float]]:
         return self._take_profit
 
     @property

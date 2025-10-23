@@ -75,7 +75,7 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
   useImperativeHandle(ref, () => ({
     setData: (data: any) => {
       // This component only needs the equity curves
-      const formattedData = data.equity_curve.map((v: number, i: number) => ({
+      const formattedData = data.equity_curve.simple.map((v: number, i: number) => ({
         index: i,
         Strategy: v,
         Benchmark: data.benchmark_curve[i],

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from datetime import timedelta
+from datetime import timedelta, datetime
+from typing import List, Tuple
 from components.candle import Candle
 from components.trades import Trade
 from strategies.strategy import Strategy
@@ -16,13 +17,13 @@ class Simulator:
         self._trades: list[Trade] = []
         self._active_trades: list[Trade] = []
         self._start_index = self._compute_start_index(duration_days)
+        self._cash_flows: List[Tuple[datetime, float]] = []
 
     def _compute_start_index(self, duration_days: int) -> int:
         """Finds the index in self.df to start from based on a rolling window of N days."""
         if duration_days is None:
             return 0
         target_date = self.df.index[-1] - timedelta(days=duration_days)
-        # searchsorted returns the insertion point, which is exactly the start index
         start_idx = self.df.index.searchsorted(target_date, side="left")
         return int(start_idx)
 
@@ -30,16 +31,15 @@ class Simulator:
         self.df["Cash"] = np.full(len(self.df), self._portfolio_value)
         cash_series = self.df["Cash"].to_numpy(copy=True)
 
+        start_date = self.df.index[self._start_index]
+        self._cash_flows.append((start_date, -self._initial_cash))
+
         for i in range(self._start_index, len(self.df)):
             candle = Candle(i, self.df)
 
-            # Check existing trades
             self._update_open_trades(i, candle)
-
-            # Clean up closed trades
             self._active_trades = [t for t in self._active_trades if t.is_open]
 
-            # Try to open new trade
             for rule in self._strategy.rules:
                 context = {'open_trades': self._active_trades, 'offset': self._start_index}
                 new_trade = rule.generate_signal(i, self.df, **context)
@@ -47,13 +47,17 @@ class Simulator:
                     self._trades.append(new_trade)
                     self._active_trades.append(new_trade)
 
-            # Update portfolio value
             equity = self._portfolio_value
             for trade in self._active_trades:
                 equity += trade.calculate_equity(candle)
 
             cash_series[i] = self._portfolio_value
             self._equity_curve.append(equity)
+
+        end_date = self.df.index[-1]
+        final_equity = self._equity_curve[-1] if self._equity_curve else self._initial_cash
+        self._cash_flows.append((end_date, final_equity))
+
 
     def _update_open_trades(self, i: int, candle: Candle) -> None:
         for trade in self._active_trades:
@@ -72,3 +76,7 @@ class Simulator:
     @property
     def equity_curve(self):
         return pd.Series(self._equity_curve)
+
+    @property
+    def cash_flows(self):
+        return self._cash_flows
