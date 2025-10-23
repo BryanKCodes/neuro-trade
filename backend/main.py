@@ -3,10 +3,13 @@ from pydantic import BaseModel
 from typing import Any, Dict
 
 from backtest import run_backtest
+from ai.prompt import generate_prompt
 
 app = FastAPI(title="NeuroTrade API")
 
-# Pydantic models for input validation
+# ===================================================================
+# Backtest Endpoint
+# ===================================================================
 class BacktestRequest(BaseModel):
     asset: str
     duration: int
@@ -29,3 +32,18 @@ def backtest(req: BacktestRequest):
         initial_cash=req.cash
     )
     return result
+
+# ===================================================================
+# Chat Prompt Endpoint
+# ===================================================================
+class ChatRequest(BaseModel):
+    prompt: str
+
+
+@app.post("/api/chat")
+def chat(req: ChatRequest):
+    """
+    Generate the AI prompt based on the schema + user message.
+    """
+    full_prompt = generate_prompt() + "\n\nPrompt: " + req.prompt
+    return {"reply": full_prompt}

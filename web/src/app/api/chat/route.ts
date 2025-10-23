@@ -3,7 +3,22 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { message } = await req.json();
 
-  // This is your fixed dummy JSON strategy
+  let reply = "Sorry I didn't understand that.";
+  if (message.startsWith('/prompt ')) {
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: message }),
+    });
+
+    const data = await res.json();
+    reply = data.reply;
+  }
+
+  // Dummy JSON strategy
+  /*
   const strategyJson = {
     rules: [
       {
@@ -63,9 +78,139 @@ export async function POST(req: Request) {
       },
     ],
   };
+  */
+
+  const strategyJson = {
+    "rules": [
+      {
+        "trade": "long",
+        "filter": {
+          "type": "TruePredicate"
+        },
+        "entry": {
+          "type": "Shifted",
+          "predicate": {
+            "type": "Threshold",
+            "below": {
+              "type": "Price",
+              "output": "close"
+            },
+            "above": {
+              "type": "Price",
+              "output": "open"
+            }
+          },
+          "shift": 1
+        },
+        "exit": {
+          "type": "Not",
+          "predicate": {
+            "type": "Shifted",
+            "predicate": {
+              "type": "Threshold",
+              "below": {
+                "type": "Price",
+                "output": "close"
+              },
+              "above": {
+                "type": "Price",
+                "output": "open"
+              }
+            },
+            "shift": 1
+          }
+        },
+        "stop_loss": {
+          "type": "NoneExpression"
+        },
+        "take_profit": {
+          "type": "NoneExpression"
+        },
+        "sizing": {
+          "type": "Divide",
+          "left": {
+            "type": "Multiply",
+            "left": {
+              "type": "Number",
+              "value": 0.95
+            },
+            "right": {
+              "type": "Cash"
+            }
+          },
+          "right": {
+            "type": "Price",
+            "output": "close"
+          }
+        }
+      },
+      {
+        "trade": "short",
+        "filter": {
+          "type": "TruePredicate"
+        },
+        "entry": {
+          "type": "Not",
+          "predicate": {
+            "type": "Shifted",
+            "predicate": {
+              "type": "Threshold",
+              "below": {
+                "type": "Price",
+                "output": "close"
+              },
+              "above": {
+                "type": "Price",
+                "output": "open"
+              }
+            },
+            "shift": 1
+          }
+        },
+        "exit": {
+          "type": "Shifted",
+          "predicate": {
+            "type": "Threshold",
+            "below": {
+              "type": "Price",
+              "output": "close"
+            },
+            "above": {
+              "type": "Price",
+              "output": "open"
+            }
+          },
+          "shift": 1
+        },
+        "stop_loss": {
+          "type": "NoneExpression"
+        },
+        "take_profit": {
+          "type": "NoneExpression"
+        },
+        "sizing": {
+          "type": "Divide",
+          "left": {
+            "type": "Multiply",
+            "left": {
+              "type": "Number",
+              "value": 0.95
+            },
+            "right": {
+              "type": "Cash"
+            }
+          },
+          "right": {
+            "type": "Price",
+            "output": "close"
+          }
+        }
+      }
+    ]
+  }
 
   return NextResponse.json({
-    reply: `Here's your dummy strategy for testing, based on: "${message}"`,
+    reply: reply,
     strategy: strategyJson,
   });
 }
