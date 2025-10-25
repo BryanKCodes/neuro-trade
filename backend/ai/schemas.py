@@ -78,8 +78,8 @@ from components.predicate.logic.or_ import OrModel
 from components.predicate.patterns.candlestick.candle import CandleModel
 # Signals
 from components.predicate.signals.interval import IntervalModel
-from components.predicate.signals.max import MaxModel
-from components.predicate.signals.min import MinModel
+from components.predicate.signals.peak import PeakModel
+from components.predicate.signals.trough import TroughModel
 from components.predicate.signals.session import SessionModel
 from components.predicate.signals.wick import WickModel
 
@@ -124,7 +124,7 @@ AnyPredicate = Union[
     # Patterns
     CandleModel,
     # Signals
-    IntervalModel, MaxModel, MinModel, SessionModel, WickModel
+    IntervalModel, PeakModel, TroughModel, SessionModel, WickModel
 ]
 
 

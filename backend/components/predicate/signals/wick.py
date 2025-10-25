@@ -1,5 +1,5 @@
 import pandas as pd
-from pydantic import Field, confloat
+from pydantic import Field
 from typing import Literal
 
 from ai import BaseComponent
@@ -59,12 +59,16 @@ class WickModel(BaseComponent):
         "top",
         description="Which wick to measure: 'top' for upper wick, 'bottom' for lower."
     )
-    lower_bound: confloat(ge=0.0, le=1.0) = Field(
+    lower_bound: float = Field(
         0.0,
+        ge=0.0,
+        le=1.0,
         description="Minimum wick/total-range ratio. Must be between 0.0 and 1.0."
     )
-    upper_bound: confloat(ge=0.0, le=1.0) = Field(
+    upper_bound: float = Field(
         1.0,
+        ge=0.0,
+        le=1.0,
         description="Maximum wick/total-range ratio. Must be between 0.0 and 1.0."
     )
 

@@ -1,6 +1,6 @@
 import pandas as pd
-from pydantic import Field, conint
-from typing import Literal
+from pydantic import Field
+from typing import Literal, Optional
 
 from ai import BaseComponent
 from components.predicate import Predicate
@@ -10,10 +10,10 @@ from components.predicate import Predicate
 # 1. The Logic Class
 # ==================================
 class Interval(Predicate):
-    def __init__(self, interval: int = 30, start: int = 0, stop: int = float('inf')) -> None:
+    def __init__(self, interval: int = 30, start: int = 0, stop: Optional[int] = None) -> None:
         self.interval = interval
         self.start = start
-        self.stop = stop
+        self.stop = float('inf') if stop is None else stop
 
     def condition(self, i: int, df: pd.DataFrame, **kwargs) -> bool:
         idx = i - kwargs.get('offset', 0)
@@ -30,16 +30,19 @@ class IntervalModel(BaseComponent):
     or checks (e.g. re-balancing every N bars).
     """
     type: Literal["Interval"] = "Interval"
-    interval: conint(ge=1) = Field(
+    interval: int = Field(
         30,
+        ge=1,
         description="Number of bars between signals. Must be ≥ 1."
     )
-    start: conint(ge=0) = Field(
+    start: int = Field(
         0,
+        ge=0,
         description="Index at which to begin firing signals. Must be ≥ 0."
     )
-    stop: conint(ge=0) = Field(
-        float('inf'),
+    stop: Optional[int] = Field(
+        None,
+        ge=0,
         description="Index at which to stop firing (exclusive). Must be ≥ 0."
     )
 
