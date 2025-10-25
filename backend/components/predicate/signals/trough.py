@@ -1,19 +1,20 @@
 import pandas as pd
 from pydantic import Field
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 from ai import BaseComponent
 from components.predicate import Predicate
 from components.expression.series import Series
 
 # --- Forward Reference for recursive models ---
-AnyExpression = "AnyExpression"
+if TYPE_CHECKING:
+    from ai.schemas import AnySeries
 
 
 # ==================================
 # 1. The Logic Class
 # ==================================
-class Min(Predicate):
+class Trough(Predicate):
     def __init__(self, series: Series):
         """
         :param series: The Series to evaluate for local minima.
@@ -36,7 +37,7 @@ class Min(Predicate):
 # ==================================
 # 2. The Pydantic Schema
 # ==================================
-class MinModel(BaseComponent):
+class TroughModel(BaseComponent):
     """
     Predicate that returns True if the value of the provided series at index `i`
     is strictly less than its immediate neighbors (i-1 and i+1),
@@ -46,12 +47,12 @@ class MinModel(BaseComponent):
     filtered price series, or any pivot indicator series.
     """
     type: Literal["Min"] = "Min"
-    series: AnyExpression = Field(
+    series: "AnySeries" = Field(
         ...,
         description="Series to check for local minima (pivot points)."
     )
 
-    def build(self) -> Min:
-        return Min(
+    def build(self) -> Trough:
+        return Trough(
             series=self.series.build()
         )
