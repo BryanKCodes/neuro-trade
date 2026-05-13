@@ -1,12 +1,26 @@
 import { ReactNode } from "react";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ModalProvider } from "@/contexts/ModalContext";
 import { UserProvider } from "@/contexts/UserContext";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
 export const metadata = {
-  title: "My Web App",
-  description: "Next.js App Router layout",
+  title: "NeuroTrade — Build Strategies. Not Code.",
+  description:
+    "A no-code algorithmic trading platform powered by AI. Describe a strategy in plain English and backtest it instantly.",
 };
 
 type RootLayoutProps = {
@@ -15,18 +29,16 @@ type RootLayoutProps = {
 
 const RootLayout = ({ children }: RootLayoutProps) => {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body>
         <AuthProvider>
           <UserProvider>
-            <ModalProvider>
-              {children}
-            </ModalProvider>
+            <ModalProvider>{children}</ModalProvider>
           </UserProvider>
         </AuthProvider>
       </body>
     </html>
   );
-}
+};
 
 export default RootLayout;

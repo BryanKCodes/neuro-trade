@@ -10,17 +10,26 @@ const Header = () => {
   const [user] = useAuthState(auth);
 
   return (
-    <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-800 dark:bg-slate-900">
-      {/* Left section */}
-      <Logo />
+    <header className="flex shrink-0 items-center justify-between border-b border-border-subtle bg-surface-card px-6 py-3">
+      <Link href="/" aria-label="NeuroTrade home">
+        <Logo />
+      </Link>
 
-      {/* Right section */}
-      <div className="flex items-center gap-6">
+      <nav className="hidden items-center gap-7 text-sm text-content-muted sm:flex">
+        <Link href="/" className="transition-colors hover:text-content-primary">
+          Home
+        </Link>
+        <Link href="/about" className="transition-colors hover:text-content-primary">
+          About
+        </Link>
+      </nav>
+
+      <div className="flex items-center gap-3">
         {user ? (
           <>
             <Link
               href="/dashboard"
-              className="rounded-md px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-content-muted transition-colors hover:bg-surface-raised hover:text-content-primary"
             >
               Dashboard
             </Link>
@@ -29,7 +38,7 @@ const Header = () => {
         ) : (
           <Link
             href="/auth/login"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            className="rounded-lg bg-accent-blue px-4 py-1.5 text-sm font-semibold text-white transition-all hover:brightness-110"
           >
             Sign In
           </Link>
@@ -37,6 +46,6 @@ const Header = () => {
       </div>
     </header>
   );
-}
+};
 
 export default Header;

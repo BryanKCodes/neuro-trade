@@ -1,9 +1,9 @@
 const Logo = () => {
   return (
-    <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-        NeuroTrade
-    </h1>
+    <span className="text-base font-semibold tracking-tight text-content-primary">
+      Neuro<span className="text-accent-blue">Trade</span>
+    </span>
   );
-}
+};
 
 export default Logo;
