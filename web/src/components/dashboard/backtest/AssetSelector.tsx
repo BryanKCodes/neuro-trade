@@ -36,7 +36,7 @@ const AssetSelector = forwardRef(function AssetSelector(
   return (
     <button
       onClick={handleClick}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium text-neutral-800 dark:text-neutral-200"
+      className="flex h-full items-center gap-2 px-3 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium text-neutral-800 dark:text-neutral-200"
     >
       <FiSearch className="w-4 h-4 text-neutral-500" />
       <span>{selectedSymbol}</span>

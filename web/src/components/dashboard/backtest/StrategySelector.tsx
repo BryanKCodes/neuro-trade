@@ -97,6 +97,7 @@ const StrategySelector = forwardRef<StrategySelectorHandle>((_, ref) => {
         onSelect={(value) => setStrategy(value)}
         items={strategyItems}
         renderLabel={(v) => v}
+        align="left"
       />
 
       <span className="font-semibold px-1">vs</span>

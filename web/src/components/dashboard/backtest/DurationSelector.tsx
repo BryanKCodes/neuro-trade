@@ -84,7 +84,7 @@ const DurationSelector = forwardRef(function DurationSelector(
       {/* Icon + Number */}
       <div
         className={clsx(
-          "flex items-center px-2 py-2 rounded-md",
+          "flex h-full items-center px-2 rounded-md",
           "hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
         )}
       >
@@ -109,6 +109,7 @@ const DurationSelector = forwardRef(function DurationSelector(
         selected={unit}
         onSelect={handleUnitChange}
         items={["days", "weeks", "months", "years"]}
+        align="left"
       />
     </div>
   );

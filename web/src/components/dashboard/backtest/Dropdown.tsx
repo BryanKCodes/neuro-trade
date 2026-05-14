@@ -12,6 +12,7 @@ type DropdownProps<T extends string | number> = {
   items?: T[];
   renderLabel?: (item: T) => string;
   className?: string;
+  align?: "left" | "right";
 };
 
 export default function Dropdown<T extends string | number>({
@@ -21,6 +22,7 @@ export default function Dropdown<T extends string | number>({
   categories,
   items,
   renderLabel = (i) => String(i),
+  align = "right",
 }: DropdownProps<T>) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -69,10 +71,7 @@ export default function Dropdown<T extends string | number>({
 
       {open && (
         <div
-          className="absolute z-50 right-0 mt-2 w-40 max-h-64 overflow-auto rounded-md
-                        border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 
-                        shadow-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 
-                        scrollbar-track-transparent"
+          className={`absolute z-50 ${align === "left" ? "left-0" : "right-0"} mt-2 w-40 max-h-64 overflow-auto rounded-md border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent`}
         >
           {categories
             ? Object.entries(categories).map(([group, list]) => (

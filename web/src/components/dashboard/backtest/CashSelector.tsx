@@ -44,7 +44,7 @@ const CashSelector = forwardRef(function CashSelector(
   return (
     <div
       className={clsx(
-        "flex items-center gap-2 px-3 py-2 rounded-md",
+        "flex h-full items-center gap-2 px-3 rounded-md",
         "hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors",
         "text-sm text-black dark:text-white"
       )}
