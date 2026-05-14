@@ -41,6 +41,9 @@ class Simulator:
             self._active_trades = [t for t in self._active_trades if t.is_open]
 
             for rule in self._strategy.rules:
+                # Position guard: one open trade per rule at a time
+                if any(t.rule is rule for t in self._active_trades):
+                    continue
                 context = {'open_trades': self._active_trades, 'offset': self._start_index}
                 new_trade = rule.generate_signal(i, self.df, **context)
                 if new_trade:
@@ -66,8 +69,12 @@ class Simulator:
             hit_tp = trade.is_take_profit_hit(i, candle)
 
             if exit_now or hit_stop or hit_tp:
-                trade.close(candle.candle_close)
+                trade.close(candle.candle_close, i)
                 self._portfolio_value += trade.pnl() or 0
+
+    @property
+    def start_index(self) -> int:
+        return self._start_index
 
     @property
     def trades(self):

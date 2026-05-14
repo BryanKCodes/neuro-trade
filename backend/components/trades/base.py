@@ -33,6 +33,7 @@ class Trade(ABC):
         self._rule = rule
         self._entry_price = entry_price
         self._exit_price: Optional[float] = None
+        self._exit_i: Optional[int] = None
         self._size = size
         self._slippage: float = 0.001
         self._is_open: bool = True
@@ -103,13 +104,9 @@ class Trade(ABC):
         """
         return self._entry_price * self._size
 
-    def close(self, exit_price: float) -> None:
-        """
-        Close the trade at the given exit price.
-
-        :param exit_price: Price at which the trade is closed
-        """
+    def close(self, exit_price: float, exit_i: int) -> None:
         self._exit_price = exit_price
+        self._exit_i = exit_i
         self._is_open = False
 
     def active_days(self, curr_day: int) -> int:
@@ -120,6 +117,14 @@ class Trade(ABC):
         :return: The number of days since the trade entry
         """
         return curr_day - self._i
+
+    @property
+    def entry_i(self) -> int:
+        return self._i
+
+    @property
+    def exit_i(self) -> Optional[int]:
+        return self._exit_i
 
     @property
     def rule(self) -> Any:
