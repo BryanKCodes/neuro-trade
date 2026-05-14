@@ -1,5 +1,7 @@
 "use client";
+
 import { useEffect, useRef } from "react";
+import { FiBarChart2 } from "react-icons/fi";
 
 type ChartWidgetProps = {
   symbol?: string;
@@ -11,9 +13,6 @@ const ChartWidget = ({ symbol = "NASDAQ:AAPL", interval = "D" }: ChartWidgetProp
 
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const theme = prefersDark ? "dark" : "light";
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/tv.js";
@@ -28,10 +27,10 @@ const ChartWidget = ({ symbol = "NASDAQ:AAPL", interval = "D" }: ChartWidgetProp
         symbol,
         interval,
         timezone: "Etc/UTC",
-        theme,
+        theme: "dark",
         style: "1",
         locale: "en",
-        toolbar_bg: theme === "dark" ? "#1e1e1e" : "#f1f3f6",
+        toolbar_bg: "#111827",
         enable_publishing: false,
         allow_symbol_change: true,
       });
@@ -40,7 +39,11 @@ const ChartWidget = ({ symbol = "NASDAQ:AAPL", interval = "D" }: ChartWidgetProp
     document.body.appendChild(script);
   }, [symbol, interval]);
 
-  return <div id="tv_chart_container" ref={containerRef} />;
-}
+  return (
+    <div className="h-full w-full overflow-hidden rounded-lg border border-border-subtle">
+      <div id="tv_chart_container" ref={containerRef} className="h-full w-full" />
+    </div>
+  );
+};
 
 export default ChartWidget;

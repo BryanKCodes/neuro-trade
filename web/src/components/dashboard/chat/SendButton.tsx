@@ -5,15 +5,12 @@ const SendButton = ({ onClick, disabled }: { onClick: () => void; disabled: bool
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center transition-colors
-                      bg-gray-200 text-white hover:bg-gray-300
-                      dark:bg-neutral-700 dark:text-white dark:hover:bg-neutral-600
-                      disabled:bg-gray-200 dark:disabled:bg-neutral-700/50 disabled:cursor-not-allowed"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-blue text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
       aria-label="Send message"
     >
-      <IoSend className="w-4 h-4" />
+      <IoSend className="h-3.5 w-3.5" />
     </button>
   );
-}
+};
 
 export default SendButton;

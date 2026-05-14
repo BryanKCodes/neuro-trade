@@ -1,164 +1,258 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
+  createChart,
+  LineSeries,
+  ColorType,
+  CrosshairMode,
+  LineStyle,
+  type IChartApi,
+  type ISeriesApi,
+  type UTCTimestamp,
+} from "lightweight-charts";
 import { FiBarChart2 } from "react-icons/fi";
-import Dropdown from "@/components/dashboard/backtest/Dropdown";
 
-// A specific handle for this component
 export type ChartHandle = {
   setData: (data: any) => void;
 };
 
-// Define the available return types
-type ReturnType = "Simple" | "Time-Weighted" | "Money-Weighted";
-const RETURN_TYPES: ReturnType[] = ["Simple", "Time-Weighted", "Money-Weighted"];
+// Quant Dark palette
+const BG_COLOR = "#111827";        // surface-card
+const GRID_COLOR = "#1F2D40";      // border-subtle
+const TEXT_COLOR = "#64748B";      // content-muted
+const STRATEGY_COLOR = "#3b82f6";  // accent-blue
+const BENCHMARK_COLOR = "#f97316"; // accent-amber
+const CROSSHAIR_COLOR = "#06B6D4"; // accent-cyan
 
-// Utility function needed for the chart's Y-axis and tooltip
-function formatNumberAbbrev(input: any) {
-  if (input == null) return "0.00";
-  const numeric = parseFloat(String(input).replace(/[^0-9.-]/g, ""));
-  if (isNaN(numeric)) return "0.00";
+const BASE_SECONDS = Date.UTC(2020, 0, 1) / 1000;
 
-  if (Math.abs(numeric) >= 1_000_000_000) return (numeric / 1_000_000_000).toFixed(2) + "B";
-  if (Math.abs(numeric) >= 1_000_000) return (numeric / 1_000_000).toFixed(2) + "M";
-  if (Math.abs(numeric) >= 1_000) return (numeric / 1_000).toFixed(2) + "K";
-  return numeric.toFixed(2);
+function buildTimeSeries(values: number[]): { time: UTCTimestamp; value: number }[] {
+  return values.map((value, i) => ({
+    time: (BASE_SECONDS + i * 86400) as UTCTimestamp,
+    value,
+  }));
 }
 
-// The tooltip is only used by the chart, so it belongs here
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95">
-        <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-          Period {payload[0].payload.index}
-        </p>
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: payload[0].color }} />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Strategy</span>
-            </div>
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {formatNumberAbbrev(payload[0].value)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: payload[1].color }} />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Benchmark</span>
-            </div>
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {formatNumberAbbrev(payload[1].value)}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
+function fmt(v: number): string {
+  if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(2) + "M";
+  if (Math.abs(v) >= 1_000) return (v / 1_000).toFixed(2) + "K";
+  return v.toFixed(2);
+}
+
+type TooltipState = {
+  visible: boolean;
+  strategy: string;
+  benchmark: string;
+  x: number;
+  y: number;
 };
 
 const Chart = forwardRef<ChartHandle>((_, ref) => {
-  const [chartData, setChartData] = useState<any[] | null>(null);
-  const [returnType, setReturnType] = useState<ReturnType>("Simple");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const stratRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const benchRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const [hasData, setHasData] = useState(false);
+  const [tooltip, setTooltip] = useState<TooltipState>({
+    visible: false,
+    strategy: "",
+    benchmark: "",
+    x: 0,
+    y: 0,
+  });
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const chart = createChart(container, {
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+      layout: {
+        background: { type: ColorType.Solid, color: BG_COLOR },
+        textColor: TEXT_COLOR,
+        fontFamily: "var(--font-jetbrains-mono), 'Courier New', monospace",
+        fontSize: 11,
+      },
+      grid: {
+        vertLines: { color: GRID_COLOR, style: LineStyle.Solid },
+        horzLines: { color: GRID_COLOR, style: LineStyle.Solid },
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: {
+          color: CROSSHAIR_COLOR,
+          width: 1,
+          style: LineStyle.Dashed,
+          labelBackgroundColor: CROSSHAIR_COLOR,
+        },
+        horzLine: {
+          color: CROSSHAIR_COLOR,
+          width: 1,
+          style: LineStyle.Dashed,
+          labelBackgroundColor: CROSSHAIR_COLOR,
+        },
+      },
+      rightPriceScale: {
+        borderColor: GRID_COLOR,
+      },
+      timeScale: {
+        borderColor: GRID_COLOR,
+        timeVisible: false,
+        rightOffset: 4,
+      },
+      handleScale: true,
+      handleScroll: true,
+    });
+
+    const strategySeries = chart.addSeries(LineSeries, {
+      color: STRATEGY_COLOR,
+      lineWidth: 2,
+      priceLineVisible: false,
+      lastValueVisible: true,
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 4,
+      crosshairMarkerBorderColor: STRATEGY_COLOR,
+      crosshairMarkerBackgroundColor: STRATEGY_COLOR,
+    });
+
+    const benchmarkSeries = chart.addSeries(LineSeries, {
+      color: BENCHMARK_COLOR,
+      lineWidth: 2,
+      lineStyle: LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: true,
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 4,
+      crosshairMarkerBorderColor: BENCHMARK_COLOR,
+      crosshairMarkerBackgroundColor: BENCHMARK_COLOR,
+    });
+
+    chartRef.current = chart;
+    stratRef.current = strategySeries;
+    benchRef.current = benchmarkSeries;
+
+    // Custom tooltip via crosshair subscription
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.point || !param.time) {
+        setTooltip((t) => ({ ...t, visible: false }));
+        return;
+      }
+      const stratData = param.seriesData.get(strategySeries) as { value: number } | undefined;
+      const benchData = param.seriesData.get(benchmarkSeries) as { value: number } | undefined;
+      if (!stratData && !benchData) {
+        setTooltip((t) => ({ ...t, visible: false }));
+        return;
+      }
+      setTooltip({
+        visible: true,
+        strategy: stratData ? fmt(stratData.value) : "—",
+        benchmark: benchData ? fmt(benchData.value) : "—",
+        x: param.point.x,
+        y: param.point.y,
+      });
+    });
+
+    // ResizeObserver — keeps chart perfectly filling its container
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) {
+        chart.applyOptions({ width, height });
+      }
+    });
+    ro.observe(container);
+
+    // Cleanup: prevents memory leaks and duplicate charts on hot-reload
+    return () => {
+      ro.disconnect();
+      chart.remove();
+    };
+  }, []);
 
   useImperativeHandle(ref, () => ({
     setData: (data: any) => {
-      // This component only needs the equity curves
-      const formattedData = data.equity_curve.simple.map((v: number, i: number) => ({
-        index: i,
-        Strategy: v,
-        Benchmark: data.benchmark_curve[i],
-      }));
-      setChartData(formattedData);
+      if (!stratRef.current || !benchRef.current) return;
+      stratRef.current.setData(buildTimeSeries(data.equity_curve.simple));
+      benchRef.current.setData(buildTimeSeries(data.benchmark_curve));
+      chartRef.current?.timeScale().fitContent();
+      setHasData(true);
     },
   }));
 
-  if (!chartData) {
-    // A placeholder specific to the chart
-    return (
-      <div className="flex flex-1 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-8 dark:from-slate-900 dark:to-slate-800">
-        <div className="text-center">
-          <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-slate-200 p-4 dark:bg-slate-700">
-              <FiBarChart2 className="h-8 w-8 text-slate-500 dark:text-slate-400" />
+  return (
+    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-4 py-2.5">
+        <span className="text-sm font-semibold text-slate-100">Performance Overview</span>
+        <div className="flex items-center gap-4 text-xs text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ background: STRATEGY_COLOR }}
+            />
+            Strategy
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ background: BENCHMARK_COLOR }}
+            />
+            Benchmark
+          </span>
+        </div>
+      </div>
+
+      {/* Chart container — always rendered so LWC can initialise */}
+      <div className="relative min-h-0 flex-1">
+        <div ref={containerRef} className="h-full w-full" />
+
+        {/* Placeholder overlay before any data arrives */}
+        {!hasData && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900">
+            <div className="mb-3 rounded-full bg-slate-800 p-4">
+              <FiBarChart2 className="h-8 w-8 text-slate-500" />
+            </div>
+            <p className="text-sm font-medium text-slate-500">No performance data</p>
+            <p className="mt-1 text-xs text-slate-600">Run a backtest to see the equity curve</p>
+          </div>
+        )}
+
+        {/* Crosshair tooltip */}
+        {tooltip.visible && hasData && (
+          <div
+            className="pointer-events-none absolute z-20 min-w-[140px] rounded-lg border border-slate-700 bg-slate-900/90 p-2.5 text-xs shadow-xl backdrop-blur-sm"
+            style={{
+              left: Math.min(tooltip.x + 14, (containerRef.current?.offsetWidth ?? 300) - 155),
+              top: Math.max(tooltip.y - 64, 6),
+            }}
+          >
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 text-slate-400">
+                <span
+                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: STRATEGY_COLOR }}
+                />
+                Strategy
+              </span>
+              <span className="font-semibold tabular-nums text-slate-100">{tooltip.strategy}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 text-slate-400">
+                <span
+                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: BENCHMARK_COLOR }}
+                />
+                Benchmark
+              </span>
+              <span className="font-semibold tabular-nums text-slate-100">{tooltip.benchmark}</span>
             </div>
           </div>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            No performance data available
-          </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
-            Run a backtest to see the performance chart
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 min-h-0">
-      <div className="flex items-center justify-between p-4 pb-3 shrink-0">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Performance Overview
-        </h2>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-            <span className="font-medium text-slate-600 dark:text-slate-400">Strategy</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-orange-500"></div>
-            <span className="font-medium text-slate-600 dark:text-slate-400">Benchmark</span>
-          </div>
-          <div className="flex items-center font-sm h-8">
-            <Dropdown
-              items={RETURN_TYPES}
-              selected={returnType}
-              onSelect={(value) => setReturnType(value as ReturnType)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 px-4 pb-4 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} stroke="currentColor" />
-            <YAxis
-              domain={['dataMin * 0.98', 'dataMax * 1.02']}
-              tickFormatter={(val) => formatNumberAbbrev(val)}
-              width={70}
-              tick={{ fill: "currentColor", fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              className="text-slate-600 dark:text-slate-400"
-            />
-            <XAxis
-              dataKey="index"
-              tick={{ fill: "currentColor", fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              className="text-slate-600 dark:text-slate-400"
-              interval="preserveStartEnd"
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line type="monotone" dataKey="Strategy" stroke="#3b82f6" dot={false} strokeWidth={2.5} activeDot={{ r: 4, fill: "#3b82f6" }} />
-            <Line type="monotone" dataKey="Benchmark" stroke="#f97316" dot={false} strokeWidth={2.5} activeDot={{ r: 4, fill: "#f97316" }} />
-          </LineChart>
-        </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
 });
 
+Chart.displayName = "Chart";
 export default Chart;

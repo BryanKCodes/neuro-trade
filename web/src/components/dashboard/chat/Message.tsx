@@ -1,14 +1,15 @@
 const Message = ({ text, isUser }: { text: string; isUser: boolean }) => {
   return (
     <div
-      className={`max-w-[75%] px-4 py-2 rounded-lg text-sm my-1 whitespace-pre-wrap break-words ${isUser
-        ? "bg-blue-500 text-white self-end"
-        : "bg-gray-200 dark:bg-neutral-800 text-black dark:text-white self-start"
-        }`}
+      className={`my-1 max-w-[82%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${
+        isUser
+          ? "self-end bg-accent-blue text-white"
+          : "self-start bg-surface-raised text-content-primary"
+      }`}
     >
       {text}
     </div>
   );
-}
+};
 
 export default Message;
