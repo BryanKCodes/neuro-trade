@@ -369,8 +369,8 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
           <div
             className="pointer-events-none absolute z-20 min-w-[140px] rounded-lg border border-slate-700 bg-slate-900/90 p-2.5 text-xs shadow-xl backdrop-blur-sm"
             style={{
-              left: Math.min(tooltip.x + 14, (containerRef.current?.offsetWidth ?? 300) - 155),
-              top:  Math.max(tooltip.y - 60, 6),
+              left: Math.min(tooltip.x + 15, (containerRef.current?.offsetWidth  ?? 300) - 155),
+              top:  Math.min(tooltip.y + 15, (containerRef.current?.offsetHeight ?? 200) -  70),
             }}
           >
             <div className="flex flex-col gap-1">

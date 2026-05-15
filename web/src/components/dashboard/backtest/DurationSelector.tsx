@@ -15,7 +15,7 @@ export type DurationSelectorHandle = {
   getData: () => number;
 };
 
-const MAX_DAYS = 3650;
+const MAX_DAYS = 3650; // backstop used only by getData()
 
 const unitToDays = {
   days: 1,
@@ -23,6 +23,13 @@ const unitToDays = {
   months: 30,
   years: 365,
 } as const;
+
+const maxPerUnit: Record<string, number> = {
+  days: 3650,
+  weeks: 520,
+  months: 120,
+  years: 10,
+};
 
 type Unit = keyof typeof unitToDays;
 
@@ -56,27 +63,16 @@ const DurationSelector = forwardRef(function DurationSelector(
     }
     let num = Number(value);
     if (num < 1) num = 1;
-
-    let totalDays = num * unitToDays[unit];
-    if (totalDays > MAX_DAYS) totalDays = MAX_DAYS;
-
-    // Keep same unit, but clamp value based on MAX_DAYS
-    const clampedValue = Math.round(totalDays / unitToDays[unit]);
-    setValue(String(clampedValue));
+    if (num > maxPerUnit[unit]) num = maxPerUnit[unit];
+    setValue(String(num));
   };
 
   const handleUnitChange = (item: string) => {
     const newUnit = item as Unit;
-
-    // Convert current value to total days first
-    let totalDays = Number(value) * unitToDays[unit];
-    if (totalDays > MAX_DAYS) totalDays = MAX_DAYS;
-
-    // Then convert total days to new unit and round
-    const newValue = Math.max(1, Math.round(totalDays / unitToDays[newUnit]));
-
+    // Keep the number as-is; only cap if it would exceed 10 years in the new unit.
+    const current = Math.max(1, Number(value) || 1);
+    setValue(String(Math.min(current, maxPerUnit[newUnit])));
     setUnit(newUnit);
-    setValue(String(newValue));
   };
 
   return (
