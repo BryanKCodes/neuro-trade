@@ -85,125 +85,74 @@ export async function POST(req: Request) {
       {
         "trade": "long",
         "filter": {
-          "type": "TruePredicate"
+          "type": "Threshold",
+          "below": { "type": "Number", "value": 25 },
+          "above": { "type": "ADX", "period": 14, "output": "adx" }
         },
         "entry": {
-          "type": "Shifted",
-          "predicate": {
-            "type": "Threshold",
-            "below": {
-              "type": "Price",
-              "output": "close"
+          "type": "And",
+          "predicates": [
+            {
+              "type": "Threshold",
+              "below": { "type": "EMA", "period": 50 },
+              "above": { "type": "EMA", "period": 20 }
             },
-            "above": {
-              "type": "Price",
-              "output": "open"
+            {
+              "type": "Crossover",
+              "first": { "type": "RSI", "period": 14 },
+              "second": { "type": "Number", "value": 50 },
+              "direction": "above"
             }
-          },
-          "shift": 1
+          ]
         },
         "exit": {
-          "type": "Not",
-          "predicate": {
-            "type": "Shifted",
-            "predicate": {
-              "type": "Threshold",
-              "below": {
-                "type": "Price",
-                "output": "close"
-              },
-              "above": {
-                "type": "Price",
-                "output": "open"
-              }
+          "type": "Or",
+          "predicates": [
+            {
+              "type": "Crossover",
+              "first": { "type": "EMA", "period": 20 },
+              "second": { "type": "EMA", "period": 50 },
+              "direction": "below"
             },
-            "shift": 1
-          }
+            {
+              "type": "Threshold",
+              "below": { "type": "RSI", "period": 14 },
+              "above": { "type": "Number", "value": 40 }
+            }
+          ]
         },
         "stop_loss": {
-          "type": "NoneExpression"
+          "type": "Static",
+          "expression": {
+            "type": "Subtract",
+            "left": { "type": "Price", "output": "close" },
+            "right": {
+              "type": "Multiply",
+              "left": { "type": "Number", "value": 2.0 },
+              "right": { "type": "ATR", "period": 14 }
+            }
+          }
         },
         "take_profit": {
-          "type": "NoneExpression"
+          "type": "Static",
+          "expression": {
+            "type": "Add",
+            "left": { "type": "Price", "output": "close" },
+            "right": {
+              "type": "Multiply",
+              "left": { "type": "Number", "value": 3.0 },
+              "right": { "type": "ATR", "period": 14 }
+            }
+          }
         },
         "sizing": {
           "type": "Divide",
           "left": {
             "type": "Multiply",
-            "left": {
-              "type": "Number",
-              "value": 0.95
-            },
-            "right": {
-              "type": "Cash"
-            }
+            "left": { "type": "Cash" },
+            "right": { "type": "Number", "value": 0.95 }
           },
-          "right": {
-            "type": "Price",
-            "output": "close"
-          }
-        }
-      },
-      {
-        "trade": "short",
-        "filter": {
-          "type": "TruePredicate"
-        },
-        "entry": {
-          "type": "Not",
-          "predicate": {
-            "type": "Shifted",
-            "predicate": {
-              "type": "Threshold",
-              "below": {
-                "type": "Price",
-                "output": "close"
-              },
-              "above": {
-                "type": "Price",
-                "output": "open"
-              }
-            },
-            "shift": 1
-          }
-        },
-        "exit": {
-          "type": "Shifted",
-          "predicate": {
-            "type": "Threshold",
-            "below": {
-              "type": "Price",
-              "output": "close"
-            },
-            "above": {
-              "type": "Price",
-              "output": "open"
-            }
-          },
-          "shift": 1
-        },
-        "stop_loss": {
-          "type": "NoneExpression"
-        },
-        "take_profit": {
-          "type": "NoneExpression"
-        },
-        "sizing": {
-          "type": "Divide",
-          "left": {
-            "type": "Multiply",
-            "left": {
-              "type": "Number",
-              "value": 0.95
-            },
-            "right": {
-              "type": "Cash"
-            }
-          },
-          "right": {
-            "type": "Price",
-            "output": "close"
-          }
+          "right": { "type": "Price", "output": "close" }
         }
       }
     ]
