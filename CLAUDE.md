@@ -173,6 +173,23 @@ Dashboard layout uses `react-resizable-panels` — 65% chart/backtest pane, 35% 
 
 ---
 
+## Engine Architecture (Non-Negotiable)
+
+The backtesting engine is the custom `Simulator` class in `backend/simulator/`. This decision is final and documented in `ARCHITECTURE_DECISION.md`. Do not introduce LEAN, backtrader, backtesting.py, or vectorbt.
+
+### Engine Invariants
+
+These constraints apply to all simulator code. Violating them introduces financial calculation bugs:
+
+1. **No same-bar entry.** Entry price must be `df['Open'].iloc[i+1]` (next bar's open), never `df['Close'].iloc[i]`. Check `i + 1 < len(df)` before entry.
+2. **Cash is finite.** `_portfolio_value` must be decremented by `trade.cost()` before a trade is accepted. Never open a trade when `_portfolio_value < trade.cost()`.
+3. **Equity = cash + notional.** During open positions, equity is `_portfolio_value + sum(size * current_price)` for longs and `_portfolio_value + sum(size * (2 * entry_price - current_price))` for shorts. Never just PnL delta.
+4. **Short/Long selection.** Use `Long if self.trade_type == 'long' else Short`. Never `Long if 'long' else Short` (always truthy).
+5. **Sizing of zero suppresses trade.** Do not apply an `or 1.0` fallback to sizing expressions. Zero means do not trade.
+6. **Pre-compute indicators.** Call `extract_all_series(strategy)` and warm up all `Series` before the simulation loop.
+
+---
+
 ## Coding Conventions
 
 ### Python / Backend
@@ -183,7 +200,8 @@ Dashboard layout uses `react-resizable-panels` — 65% chart/backtest pane, 35% 
 - **Expressions** must implement `calculate(i: int, df: DataFrame, **kwargs) -> Optional[float]`.
 - **Predicates** must implement `condition(i: int, df: DataFrame, **kwargs) -> bool`.
 - **Trades** (long/short) must subclass `Trade` from `backend/components/trades/base.py`.
-- **Do not use backtrader** for new simulation logic — the project uses the custom `Simulator` class.
+- **Do not use LEAN, backtrader, backtesting.py, or vectorbt.** The project uses the custom `Simulator` class. See `ARCHITECTURE_DECISION.md`.
+- **Indicators use composite column names.** Name format: `{INDICATOR}_{period}_{input}` (e.g., `EMA_14_close`). Never use bare names like `EMA_14` — they collide when the same indicator is used with different inputs.
 - Use `pandas-ta` for indicator computation; do not implement indicators from scratch.
 - Keep data fetching isolated in `backend/data/`; strategies and simulators must not call `yfinance` directly.
 
