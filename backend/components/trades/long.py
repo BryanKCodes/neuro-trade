@@ -35,7 +35,7 @@ class Long(Trade):
         return (self._exit_price * (1 - self._slippage) - self._entry_price) * self._size
 
     def calculate_equity(self, candle: Candle) -> float:
-        return self._size * (candle.candle_close - self._entry_price)
+        return self._size * candle.candle_close
 
     def __str__(self) -> str:
         return f"Long({super().__str__()})"

@@ -124,6 +124,14 @@ def calculate_metrics(
     ending_value = equity_curve.iloc[-1]
     trade_count = len(trades) if trades is not None else 0
 
+    # Win rate — only count closed trades; open trades have no realised PnL yet.
+    closed_trades = [t for t in trades if not t.is_open] if trades else []
+    if closed_trades:
+        winners = sum(1 for t in closed_trades if (t.pnl() or 0) > 0)
+        win_rate: Optional[float] = winners / len(closed_trades)
+    else:
+        win_rate = None
+
     # Benchmark
     if benchmark_curve is not None:
         benchmark_return = (benchmark_curve.iloc[-1] / benchmark_curve.iloc[0]) - 1
@@ -150,6 +158,7 @@ def calculate_metrics(
         },
         "Details": {
             "Trades Taken": trade_count,
+            "Win Rate": f"{win_rate:.1%}" if win_rate is not None else "N/A",
             "Outperformance": f"{outperformance:.2%}" if outperformance is not None else "N/A",
             "Volatility": f"{volatility:.2%}",
             "Sharpe Ratio": f"{sharpe:.2f}",

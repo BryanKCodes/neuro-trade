@@ -35,7 +35,8 @@ class Short(Trade):
         return (self._entry_price - self._exit_price * (1 + self._slippage)) * self._size
 
     def calculate_equity(self, candle: Candle) -> float:
-        return self._size * (self._entry_price - candle.candle_close)
+        # We reserved entry_price * size as collateral; short gains as price falls.
+        return self._size * (2 * self._entry_price - candle.candle_close)
 
     def __str__(self) -> str:
         return f"Short({super().__str__()})"

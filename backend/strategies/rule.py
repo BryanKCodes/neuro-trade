@@ -24,10 +24,6 @@ class Rule:
             sizing: Expression,
             filter: Predicate,
     ):
-        """
-        Initializes the Rule with pre-built logic components.
-        This class no longer builds components from a config dict.
-        """
         self.trade_type = trade
         self.filter = filter
         self.entry = entry
@@ -36,51 +32,47 @@ class Rule:
         self.take_profit = take_profit
         self.sizing = sizing
 
-    def generate_signal(self, i: int, df: pd.DataFrame, **context) -> Optional[Trade]:
+    def generate_signal(self, i: int, df: pd.DataFrame, **context) -> Optional[dict]:
         """
-        Generates a trade signal if all conditions are met.
-        Now requires 'cash' to be passed for sizing calculations.
+        Checks all conditions on bar i. Returns a parameter dict if a signal fires,
+        None otherwise. Does NOT create a Trade — entry is deferred to the next bar.
         """
-        # Check pre-trade filter (like session constraints)
         if self.filter and not self.filter.condition(i, df, **context):
             return None
-
-        # Check signal for entry
         if self.entry and not self.entry.condition(i, df, **context):
             return None
 
         trade_id = str(uuid.uuid4())
-        context['trade_uid'] = trade_id
+        context = {**context, 'trade_uid': trade_id}
 
-        # Compute stop loss price first, as it may be needed for sizing
-        if self.stop_loss:
-            stop_loss_price = self.stop_loss.calculate(i, df, **context)
-        else:
-            stop_loss_price = 0 if self.trade_type == 'long' else float('inf')
-
-        # Compute take profit
-        if self.take_profit:
-            take_profit_price = self.take_profit.calculate(i, df, **context)
-        else:
-            take_profit_price = float('inf') if self.trade_type == 'long' else 0
-
+        # Compute stop/take at signal bar so sizing expressions can reference them.
+        stop_loss_price = self.stop_loss.calculate(i, df, **context)
+        take_profit_price = self.take_profit.calculate(i, df, **context)
         context['stop_loss'] = stop_loss_price
         context['take_profit'] = take_profit_price
-        # Compute position size
-        size = self.sizing.calculate(i, df, **context) or 1.0  # Might be wrong
+
+        # None means no sizing expression was provided — default to 1 unit.
+        # An explicit 0.0 suppresses the trade rather than defaulting to 1.
+        raw_size = self.sizing.calculate(i, df, **context)
+        size = raw_size if raw_size is not None else 1.0
         if size <= 0:
             return None
 
-        # Create the trade
-        trade_class = Long if 'long' else Short
-        trade = trade_class(
-            uid=trade_id,
+        return {'trade_id': trade_id, 'size': size, 'context': context}
+
+    def execute_entry(self, i: int, df: pd.DataFrame, params: dict) -> Trade:
+        """
+        Creates a Trade at bar i's open price.
+        Called on the bar after the signal fires to eliminate look-ahead bias.
+        """
+        trade_class = Long if self.trade_type == 'long' else Short
+        ctx = params['context']
+        return trade_class(
+            uid=params['trade_id'],
             i=i,
             rule=self,
-            entry_price=df['Close'].iloc[i],
-            size=size,
-            stop_loss=lambda x: self.stop_loss.calculate(x, df, **context) if self.stop_loss else None,
-            take_profit=lambda x: self.take_profit.calculate(x, df, **context) if self.take_profit else None,
+            entry_price=df['Open'].iloc[i],
+            size=params['size'],
+            stop_loss=lambda x: self.stop_loss.calculate(x, df, **ctx),
+            take_profit=lambda x: self.take_profit.calculate(x, df, **ctx),
         )
-
-        return trade

@@ -20,7 +20,6 @@ class Simulator:
         self._cash_flows: List[Tuple[datetime, float]] = []
 
     def _compute_start_index(self, duration_days: int) -> int:
-        """Finds the index in self.df to start from based on a rolling window of N days."""
         if duration_days is None:
             return 0
         target_date = self.df.index[-1] - timedelta(days=duration_days)
@@ -28,49 +27,87 @@ class Simulator:
         return int(start_idx)
 
     def run(self) -> None:
+        # Initialize Cash column so the Cash expression reads portfolio value per bar.
         self.df["Cash"] = np.full(len(self.df), self._portfolio_value)
-        cash_series = self.df["Cash"].to_numpy(copy=True)
 
         start_date = self.df.index[self._start_index]
         self._cash_flows.append((start_date, -self._initial_cash))
 
+        # Signals fire on bar i but execute at bar i+1's open to prevent look-ahead bias.
+        pending_entries: list[tuple] = []  # [(rule, params_dict), ...]
+
         for i in range(self._start_index, len(self.df)):
             candle = Candle(i, self.df)
 
+            # Step 1: Execute entries that were signaled on the previous bar.
+            # Entry price is this bar's open — no knowledge of this bar's close used.
+            for rule, params in pending_entries:
+                new_trade = rule.execute_entry(i, self.df, params)
+                if self._portfolio_value <= 0:
+                    continue
+                # Sizing was computed at the signal bar's close price. The actual
+                # execution open may differ (e.g. overnight gap). Cap to what cash
+                # can genuinely afford at this bar's open so Cash/Price strategies
+                # always execute rather than being silently dropped.
+                max_affordable = self._portfolio_value / new_trade._entry_price
+                if new_trade._size > max_affordable:
+                    new_trade._size = max_affordable
+                self._portfolio_value -= new_trade.cost()
+                self._trades.append(new_trade)
+                self._active_trades.append(new_trade)
+            pending_entries = []
+
+            # Step 2: Check exits, stop-loss, and take-profit for all active trades.
+            # Closing trades restores cash before new signals are evaluated.
             self._update_open_trades(i, candle)
             self._active_trades = [t for t in self._active_trades if t.is_open]
 
+            # Step 3: Update the Cash column so Cash expressions see current capital.
+            self.df.at[self.df.index[i], 'Cash'] = self._portfolio_value
+
+            # Step 4: Evaluate entry signals. Two guards prevent double-entry:
+            #   a) One active trade per rule (position guard).
+            #   b) One queued pending entry per rule (prevents re-queuing same bar).
+            #   c) Skip the last bar — there is no next bar to execute on.
             for rule in self._strategy.rules:
-                # Position guard: one open trade per rule at a time
                 if any(t.rule is rule for t in self._active_trades):
                     continue
+                if any(r is rule for r, _ in pending_entries):
+                    continue
+                if i + 1 >= len(self.df):
+                    continue
                 context = {'open_trades': self._active_trades, 'offset': self._start_index}
-                new_trade = rule.generate_signal(i, self.df, **context)
-                if new_trade:
-                    self._trades.append(new_trade)
-                    self._active_trades.append(new_trade)
+                signal_params = rule.generate_signal(i, self.df, **context)
+                if signal_params:
+                    pending_entries.append((rule, signal_params))
 
+            # Step 5: Equity = available cash + current market value of all open positions.
+            # With cash accounting in place, this is always the true account value.
             equity = self._portfolio_value
             for trade in self._active_trades:
                 equity += trade.calculate_equity(candle)
-
-            cash_series[i] = self._portfolio_value
             self._equity_curve.append(equity)
 
         end_date = self.df.index[-1]
         final_equity = self._equity_curve[-1] if self._equity_curve else self._initial_cash
         self._cash_flows.append((end_date, final_equity))
 
-
     def _update_open_trades(self, i: int, candle: Candle) -> None:
         for trade in self._active_trades:
+            # A trade that just entered this bar cannot exit on the same bar.
+            # Enforcing a minimum 1-bar holding period prevents stacked buy/sell
+            # arrows at the same chart position and matches standard retail behavior.
+            if trade.entry_i == i:
+                continue
+
             exit_now = trade.should_exit(i, self.df)
             hit_stop = trade.is_stop_loss_hit(i, candle)
             hit_tp = trade.is_take_profit_hit(i, candle)
 
             if exit_now or hit_stop or hit_tp:
                 trade.close(candle.candle_close, i)
-                self._portfolio_value += trade.pnl() or 0
+                # Return the entry cost plus profit (or minus loss) to the cash pool.
+                self._portfolio_value += trade.cost() + (trade.pnl() or 0)
 
     @property
     def start_index(self) -> int:
