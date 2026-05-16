@@ -1,129 +1,37 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { message } = await req.json();
+  const body = await req.json();
 
-  let reply = "Sorry I didn't understand that.";
-  if (message.startsWith('/prompt ')) {
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`;
-
-    const res = await fetch(url, {
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: message }),
+      body: JSON.stringify(body),
     });
-
-    const data = await res.json();
-    reply = data.reply;
-  }
-  
-  const strategyJson = {
-    "rules": [
+  } catch {
+    return NextResponse.json(
       {
-        "trade": "long",
-        "filter": {
-          "type": "TruePredicate"
-        },
-        "entry": {
-          "type": "Or",
-          "predicates": [
-            {
-              "type": "Crossover",
-              "first": {
-                "type": "Price"
-              },
-              "second": {
-                "type": "Add",
-                "left": {
-                  "type": "EMA",
-                  "period": 20
-                },
-                "right": {
-                  "type": "ATR",
-                  "period": 14
-                }
-              }
-            },
-            {
-              "type": "Threshold",
-              "below": {
-                "type": "Subtract",
-                "left": {
-                  "type": "EMA",
-                  "period": 100
-                },
-                "right": {
-                  "type": "EMA",
-                  "period": 200
-                }
-              },
-              "above": {
-                "type": "Number",
-                "value": 0
-              }
-            }
-          ]
-        },
-        "stop_loss": {
-          "type": "Subtract",
-          "left": {
-            "type": "Price"
-          },
-          "right": {
-            "type": "Multiply",
-            "left": {
-              "type": "ATR",
-              "period": 14
-            },
-            "right": {
-              "type": "Number",
-              "value": 3.0
-            }
-          }
-        },
-        "take_profit": {
-          "type": "Add",
-          "left": {
-            "type": "Price"
-          },
-          "right": {
-            "type": "Multiply",
-            "left": {
-              "type": "ATR",
-              "period": 14
-            },
-            "right": {
-              "type": "Number",
-              "value": 3.0
-            }
-          }
-        },
-        "sizing": {
-          "type": "Divide",
-          "left": {
-            "type": "Multiply",
-            "left": {
-              "type": "Number",
-              "value": 0.02
-            },
-            "right": {
-              "type": "Cash"
-            }
-          },
-          "right": {
-            "type": "ATR",
-            "period": 14
-          }
-        },
-        "exit": {
-          "type": "FalsePredicate"
-        }
-      }
-    ]
+        reply: "The AI service is unreachable. Make sure the backend is running.",
+        strategy: null,
+        error: "fetch failed",
+      },
+      { status: 503 }
+    );
   }
 
-  return NextResponse.json({
-    reply: reply,
-    strategy: strategyJson,
-  });
+  if (!res.ok) {
+    return NextResponse.json(
+      {
+        reply: "The AI service returned an error. Please try again.",
+        strategy: null,
+        error: `HTTP ${res.status}`,
+      },
+      { status: res.status }
+    );
+  }
+
+  const data = await res.json();
+  return NextResponse.json(data);
 }
