@@ -11,6 +11,8 @@ from components.trades.long import Long
 def _serialize_trades(trades, start_index: int) -> List[Dict[str, Any]]:
     markers = []
     for trade in trades:
+        if trade._size <= 0:
+            continue
         is_long = isinstance(trade, Long)
         rel_entry = trade.entry_i - start_index
         markers.append({

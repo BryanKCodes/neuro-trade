@@ -2,11 +2,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Any, Dict, List, Literal, Optional
 
 from backtest import run_backtest
-from ai.llm_service import LLMService, StrategyGenerationError
+from ai.llm_service import LLMService
 
 app = FastAPI(title="NeuroTrade API")
 llm_service = LLMService()
@@ -39,7 +40,7 @@ def backtest(req: BacktestRequest):
 
 
 # ===================================================================
-# Chat Endpoint
+# Chat Endpoint — Server-Sent Events
 # ===================================================================
 
 class ChatMessage(BaseModel):
@@ -53,32 +54,16 @@ class ChatRequest(BaseModel):
     currentStrategy: Optional[Dict[str, Any]] = None
 
 
-class ChatResponse(BaseModel):
-    reply: str
-    strategy: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-
-
-@app.post("/api/chat", response_model=ChatResponse)
-def chat(req: ChatRequest):
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
     messages = [msg.model_dump() for msg in req.history]
     messages.append({"role": "user", "content": req.message})
 
-    try:
-        reply, strategy = llm_service.generate_strategy(messages, req.currentStrategy)
-        return ChatResponse(reply=reply, strategy=strategy)
-    except StrategyGenerationError as exc:
-        return ChatResponse(
-            reply=(
-                "I wasn't able to produce a valid strategy after several attempts. "
-                "Try rephrasing or simplifying your request."
-            ),
-            strategy=None,
-            error=str(exc),
-        )
-    except Exception as exc:
-        return ChatResponse(
-            reply="An unexpected error occurred. Please try again.",
-            strategy=None,
-            error=str(exc),
-        )
+    return StreamingResponse(
+        llm_service.stream_and_validate(messages, req.currentStrategy),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )

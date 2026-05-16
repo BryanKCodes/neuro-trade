@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import anthropic
 from pydantic import ValidationError
@@ -17,91 +17,154 @@ class StrategyGenerationError(Exception):
     pass
 
 
+def _sse(type_: str, data: Any = None) -> str:
+    payload: dict[str, Any] = {"type": type_}
+    if data is not None:
+        payload["data"] = data
+    return f"data: {json.dumps(payload)}\n\n"
+
+
 class LLMService:
     def __init__(self):
-        self.client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        self.client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         self.model = os.environ.get("LLM_MODEL", DEFAULT_MODEL)
-
-        # Computed once at startup; reused across all requests (prompt cache target).
         self._role_prompt = build_role_prompt()
         self._schema_prompt = build_schema_prompt()
-
-        # Tool definition: input_schema is derived directly from Pydantic so it
-        # stays in sync automatically whenever components are added to schemas.py.
         self._tool = {
             "name": "update_strategy",
             "description": (
                 "Emit a complete trading strategy in the NeuroTrade DSL. "
                 "Call this tool when the user asks to create, generate, or modify "
-                "a trading strategy. Do NOT call it for general questions, "
-                "explanations, or clarifications — reply with plain text instead. "
-                "Always include a text reply summarising the strategy alongside "
-                "this tool call."
+                "a trading strategy. Do NOT call it for general questions or explanations — "
+                "reply with plain text instead. "
+                "Always include a text reply summarising the strategy alongside this tool call."
             ),
             "input_schema": StrategyModel.model_json_schema(),
+            "cache_control": {"type": "ephemeral"},
         }
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def generate_strategy(
+    async def stream_and_validate(
         self,
         messages: list[dict[str, Any]],
         current_strategy: dict | None,
-    ) -> tuple[str, dict | None]:
+    ) -> AsyncGenerator[str, None]:
         """
-        Send a conversation to Claude and return (reply_text, strategy_or_None).
+        Async generator that yields SSE events.
 
-        messages  — list of {role, content} dicts (history + current user turn).
-        current_strategy — the user's active StrategyModel JSON, or None.
-
-        Raises StrategyGenerationError if a tool call is made but Pydantic
-        validation fails on every retry.
+        Phase 1 — streams text tokens from Claude as `text_delta` events.
+        Phase 2 — if a tool call was made, validates with Pydantic (with retry)
+                   and emits a `strategy` or `error` event.
+        Always ends with a `done` event.
         """
         system = self._build_system(current_strategy)
-        conversation = list(messages)
+
+        # ── Phase 1: Stream ──────────────────────────────────────────
+        full_text = ""
+        tool_use_block = None
+
+        async with self.client.messages.stream(
+            model=self.model,
+            max_tokens=4096,
+            system=system,
+            tools=[self._tool],
+            messages=messages,
+        ) as stream:
+            async for text_chunk in stream.text_stream:
+                full_text += text_chunk
+                yield _sse("text_delta", text_chunk)
+
+            final = await stream.get_final_message()
+            for block in final.content:
+                if block.type == "tool_use":
+                    tool_use_block = block
+
+        # No tool call — plain text response.
+        if tool_use_block is None:
+            yield _sse("done")
+            return
+
+        # ── Phase 2: Validate with retry ────────────────────────────
+        yield _sse("tool_start")
+
+        # Build assistant turn from Phase 1 to seed the retry conversation.
+        assistant_turn: list[dict] = []
+        if full_text:
+            assistant_turn.append({"type": "text", "text": full_text})
+        assistant_turn.append({
+            "type": "tool_use",
+            "id": tool_use_block.id,
+            "name": tool_use_block.name,
+            "input": tool_use_block.input,
+        })
+
+        conv = list(messages)
+        current_tool = tool_use_block
+        current_turn = assistant_turn
+        last_error: str | None = None
 
         for attempt in range(MAX_RETRIES):
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=4096,
-                system=system,
-                tools=[self._tool],
-                messages=conversation,
-            )
-
-            text, tool_use_block = self._extract_content(response)
-
-            # Plain text response — LLM chose not to call the tool.
-            if response.stop_reason == "end_turn" or tool_use_block is None:
-                return text or "I'm not sure how to help with that.", None
-
-            # Tool was called — validate the input with Pydantic.
             try:
-                validated = StrategyModel.model_validate(tool_use_block.input)
-                return text or "Strategy generated.", validated.model_dump()
+                validated = StrategyModel.model_validate(current_tool.input)
+                yield _sse("strategy", validated.model_dump())
+                yield _sse("done")
+                return
             except ValidationError as exc:
+                last_error = str(exc)
                 if attempt == MAX_RETRIES - 1:
-                    raise StrategyGenerationError(
-                        f"Strategy validation failed after {MAX_RETRIES} attempts. "
-                        f"Last error: {exc}"
-                    )
+                    break
 
-                # Feed the validation error back so Claude can self-correct.
-                conversation = self._append_tool_error(
-                    conversation, response, tool_use_block, exc
+                # Append failed turn + error feedback for retry.
+                conv.append({"role": "assistant", "content": current_turn})
+                conv.append({
+                    "role": "user",
+                    "content": [{
+                        "type": "tool_result",
+                        "tool_use_id": current_tool.id,
+                        "is_error": True,
+                        "content": (
+                            f"Pydantic validation failed. Fix the errors and call "
+                            f"update_strategy again with a corrected strategy.\n\n"
+                            f"Errors:\n{exc}"
+                        ),
+                    }],
+                })
+
+                # Batch retry (no streaming for retries).
+                retry_resp = await self.client.messages.create(
+                    model=self.model,
+                    max_tokens=4096,
+                    system=system,
+                    tools=[self._tool],
+                    messages=conv,
                 )
 
-        # Unreachable, but satisfies the type checker.
-        raise StrategyGenerationError("Retry loop exited without a result.")
+                retry_text, retry_tool = self._extract_content(retry_resp)
+                if retry_tool is None:
+                    break  # LLM declined to retry
+
+                current_tool = retry_tool
+                current_turn = []
+                if retry_text:
+                    current_turn.append({"type": "text", "text": retry_text})
+                current_turn.append({
+                    "type": "tool_use",
+                    "id": retry_tool.id,
+                    "name": retry_tool.name,
+                    "input": retry_tool.input,
+                })
+
+        yield _sse("error", last_error or "Strategy validation failed after multiple attempts.")
+        yield _sse("done")
 
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
 
     def _build_system(self, current_strategy: dict | None) -> list[dict]:
-        """Build the three-block system prompt. Blocks A & B are cache targets."""
         blocks = [
             {
                 "type": "text",
@@ -114,7 +177,6 @@ class LLMService:
                 "cache_control": {"type": "ephemeral"},
             },
         ]
-
         if current_strategy is not None:
             context = (
                 "The user's current active strategy is shown below. "
@@ -127,12 +189,10 @@ class LLMService:
                 "The user has no active strategy yet. "
                 "When they describe one, generate it from scratch."
             )
-
         blocks.append({"type": "text", "text": context})
         return blocks
 
     def _extract_content(self, response) -> tuple[str, Any | None]:
-        """Return (text_reply, tool_use_block_or_None) from a response."""
         text = ""
         tool_use_block = None
         for block in response.content:
@@ -141,48 +201,3 @@ class LLMService:
             elif block.type == "tool_use":
                 tool_use_block = block
         return text, tool_use_block
-
-    def _append_tool_error(
-        self,
-        conversation: list,
-        response,
-        tool_use_block,
-        exc: ValidationError,
-    ) -> list:
-        """
-        Extend the conversation with the assistant's failed tool call and a
-        tool_result error so Claude can self-correct on the next attempt.
-        """
-        # Serialize the assistant response content to plain dicts.
-        assistant_content = []
-        for block in response.content:
-            if block.type == "text":
-                assistant_content.append({"type": "text", "text": block.text})
-            elif block.type == "tool_use":
-                assistant_content.append({
-                    "type": "tool_use",
-                    "id": block.id,
-                    "name": block.name,
-                    "input": block.input,
-                })
-
-        error_feedback = {
-            "role": "user",
-            "content": [
-                {
-                    "type": "tool_result",
-                    "tool_use_id": tool_use_block.id,
-                    "is_error": True,
-                    "content": (
-                        f"Pydantic validation failed. Fix the errors and call "
-                        f"update_strategy again with a corrected strategy.\n\n"
-                        f"Errors:\n{exc}"
-                    ),
-                }
-            ],
-        }
-
-        return conversation + [
-            {"role": "assistant", "content": assistant_content},
-            error_feedback,
-        ]

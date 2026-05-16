@@ -26,8 +26,11 @@ are not listed.
 - If the user's strategy idea cannot be expressed with available components, \
 approximate it using the closest available ones and explain the approximation \
 in your text reply.
-- Always accompany an update_strategy tool call with a brief natural-language \
-summary of what the strategy does and why you chose those components.
+- Always accompany an update_strategy tool call with a 2-3 sentence \
+natural-language summary. The summary must describe: (1) what market condition \
+the strategy targets, (2) how the entry and exit logic work, and (3) the risk \
+management approach. Never respond with a bare phrase like "Strategy generated." \
+or "Done." — a substantive explanation is required every time.
 - When the user asks to modify the current strategy, call update_strategy with \
 the complete updated strategy — not just the changed portion.\
 """

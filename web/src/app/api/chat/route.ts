@@ -1,37 +1,33 @@
-import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const body = await req.json();
 
-  let res: Response;
+  let upstream: Response;
   try {
-    res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    upstream = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
   } catch {
-    return NextResponse.json(
-      {
-        reply: "The AI service is unreachable. Make sure the backend is running.",
-        strategy: null,
-        error: "fetch failed",
-      },
-      { status: 503 }
-    );
+    const errEvent =
+      `data: ${JSON.stringify({ type: "error", data: "AI service unreachable." })}\n\n` +
+      `data: ${JSON.stringify({ type: "done" })}\n\n`;
+    return new Response(errEvent, {
+      headers: { "Content-Type": "text/event-stream" },
+    });
   }
 
-  if (!res.ok) {
-    return NextResponse.json(
-      {
-        reply: "The AI service returned an error. Please try again.",
-        strategy: null,
-        error: `HTTP ${res.status}`,
-      },
-      { status: res.status }
-    );
-  }
-
-  const data = await res.json();
-  return NextResponse.json(data);
+  // Pass the SSE stream straight through to the browser.
+  return new Response(upstream.body, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    },
+  });
 }

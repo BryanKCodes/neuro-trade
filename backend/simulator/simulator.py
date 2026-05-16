@@ -45,13 +45,14 @@ class Simulator:
                 new_trade = rule.execute_entry(i, self.df, params)
                 if self._portfolio_value <= 0:
                     continue
-                # Sizing was computed at the signal bar's close price. The actual
-                # execution open may differ (e.g. overnight gap). Cap to what cash
-                # can genuinely afford at this bar's open so Cash/Price strategies
-                # always execute rather than being silently dropped.
+                # Cap size to what cash can genuinely afford at this bar's open.
                 max_affordable = self._portfolio_value / new_trade._entry_price
                 if new_trade._size > max_affordable:
                     new_trade._size = max_affordable
+                # Drop the trade if the cash-adjusted size is effectively zero.
+                # This prevents phantom chart markers from near-broke sessions.
+                if new_trade._size <= 0:
+                    continue
                 self._portfolio_value -= new_trade.cost()
                 self._trades.append(new_trade)
                 self._active_trades.append(new_trade)
