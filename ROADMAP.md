@@ -30,7 +30,7 @@ User prompt → LLM → JSON DSL → Pydantic validation → Strategy classes �
 
 ---
 
-## Phase 3 — Engine Integrity (Current Priority)
+## Phase 3 — Engine Integrity (Complete)
 
 **Goal**: The simulator must produce financially correct results before any user-facing feature is built on top of it. Every item in this phase is a blocker for Phase 4.
 
@@ -89,9 +89,11 @@ These are correctness bugs — the engine produces wrong numbers today.
 
 ---
 
-## Phase 4 — AI Strategy Generation
+## Phase 4 — AI Strategy Generation (Current Priority)
 
 **Goal**: The LLM generates valid JSON DSL strategies from natural language. The user never writes JSON manually.
+
+See `backend/ai/LLM_STRATEGY.md` for the full technical plan.
 
 ### 4.1 — LLM Service Architecture
 
@@ -214,9 +216,9 @@ The `/api/chat` Next.js route already proxies to FastAPI. The only frontend chan
 ```
 Phase 1 (Foundation) ──► Phase 2 (UI/UX)
                               │
-                              └──► Phase 3 (Engine Integrity)  ← CURRENT
+                              └──► Phase 3 (Engine Integrity)
                                         │
-                                        └──► Phase 4 (AI Pipeline)
+                                        └──► Phase 4 (AI Pipeline)  ← CURRENT
                                                   │
                                                   └──► Phase 5 (Portfolio)
                                                             │

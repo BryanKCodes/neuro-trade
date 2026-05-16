@@ -2,6 +2,8 @@
 
 NeuroTrade is a full-stack algorithmic trading strategy backtesting platform. Users define strategies via a JSON DSL (or AI-generated prompts), which are validated by Pydantic, executed by a custom simulation engine, and visualized in a Next.js dashboard.
 
+**Current phase**: Phase 4 — AI Strategy Generation. See `backend/ai/LLM_STRATEGY.md` for the full implementation plan. Phases 1–3 are complete.
+
 ---
 
 ## Project Structure
@@ -163,7 +165,9 @@ Dashboard layout uses `react-resizable-panels` — 65% chart/backtest pane, 35% 
 | `backend/strategies/rule.py` | `Rule` — holds predicates and expressions, generates trades |
 | `backend/strategies/strategy.py` | `Strategy` — ordered list of `Rule` objects |
 | `backend/ai/schemas.py` | Pydantic union types; central validation hub |
-| `backend/ai/prompt.py` | Generates AI prompt from schema for strategy suggestions |
+| `backend/ai/prompt.py` | Generates AI system prompt from schema; single source of truth for what LLM sees |
+| `backend/ai/llm_service.py` | (Phase 4) `LLMService` — calls Claude, retries on Pydantic validation errors |
+| `backend/ai/LLM_STRATEGY.md` | Phase 4 technical plan: system prompt design, prompt caching, retry loop |
 | `backend/data/loader.py` | `load_yfinance_data()` — downloads OHLCV from Yahoo Finance |
 | `backend/components/trades/base.py` | Abstract `Trade` (long/short subclasses) |
 | `web/src/app/layout.tsx` | Wraps app in Firebase + context providers |
