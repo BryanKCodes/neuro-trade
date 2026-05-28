@@ -13,228 +13,313 @@ User prompt → LLM → JSON DSL → Pydantic validation → Strategy classes �
 
 ---
 
-## Phase 1 — Foundation & Public-Facing Web (Complete)
+## Completed Phases
 
+### Phase 1 — Foundation & Authentication ✓
 - Firebase Authentication (email/password + Google SSO)
-- Home page (`/`), About page (`/about`), auth flows
+- Home page, About page, auth flows
 - Dashboard gated behind authentication
 
+### Phase 2 — Dashboard & Charting ✓
+- `lightweight-charts` v5 backtest chart (`backtest/Chart.tsx`) with candlestick, dual Y-axes, equity/benchmark lines, trade markers, OHLC header, series toggle legend
+- Resizable panel layout (`react-resizable-panels`)
+- Backtest input widgets (AssetSelector, DurationSelector, TimeframeSelector, CashSelector, StrategySelector)
+- Metrics panel (Sharpe, drawdown, XIRR, win rate, comparison table)
+
+### Phase 3 — Engine Integrity ✓
+- Cash accounting, next-bar entry (no look-ahead bias), equity correctness
+- Short trade fix, sizing-zero suppression
+- Composite indicator column names (`{INDICATOR}_{period}_{input}`), pre-computation warm-up pass
+- Commission model, slippage, max open trades guard
+- Extended metrics: Sortino, Calmar, profit factor, average trade duration
+
+### Phase 4 — AI Strategy Generation ✓
+- `LLMService` (`backend/ai/llm_service.py`) with Anthropic async streaming, tool-use (`update_strategy`), 3-attempt Pydantic retry loop
+- Prompt caching on schema block (ephemeral `cache_control`) — already active
+- Default model: `claude-haiku-4-5-20251001` — already cost-optimized
+- `LLM_MODEL` env var for model override
+- `/api/chat` FastAPI SSE endpoint
+- `ChatWidget` with SSE streaming (`text_delta`, `tool_start`, `strategy`, `error`, `done`)
+- `StrategyCard` with "Use this strategy" button → `localStorage`
+
+**Remaining Phase 4 items:**
+- [ ] Firestore strategy persistence (`users/{uid}/strategies` collection — save/load named strategies)
+- [ ] Integration test: 10 diverse English prompts all pass Pydantic validation on first attempt
+
 ---
 
-## Phase 2 — UI/UX & Charting Overhaul (Complete)
+## Phase 5 — Dashboard UI/UX Overhaul (Current Priority)
 
-- TradingView-style charting with candlesticks and trade markers
-- Resizable panel layout (chart / backtest / chat)
-- Backtest input widgets, equity curve visualization
-- Metrics panel (Sharpe, drawdown, annualized return, XIRR)
+**Goal**: Eliminate the cluttered two-tab layout. Replace it with a single professional workspace: top ribbon for backtest inputs, full-width chart, collapsible AI sidebar, metrics bottom strip.
+
+**What actually needs to change** (cross-referenced with codebase):
+- `dashboard/page.tsx` — restructure layout entirely; remove `PanelGroup`, add ribbon + single chart workspace + sidebar
+- `backtest/BacktestWidget.tsx` — refactor inputs from panel component into ribbon component
+- `dashboard/chart/ChartWidget.tsx` — **delete this file**; the TradingView TV.js embed is retired
+- `backtest/BacktestResultsPanel.tsx` — simplify; Chart fills the workspace directly, no more stacked layout
+- `backtest/Metrics.tsx` — replace with MetricsStrip + MetricsDrawer pattern
+- `chat/ChatWidget.tsx` — content unchanged; only its container/wrapper changes
+
+### 5.1 — Retire the Live Chart Tab
+
+The current "Live Chart" tab renders `ChartWidget.tsx`, which embeds the full TradingView.com TV.js widget. This tab and component are eliminated entirely. The `lightweight-charts` backtest chart becomes the one and only chart surface.
+
+- [ ] Delete `web/src/components/dashboard/chart/ChartWidget.tsx`
+- [ ] Delete the `chart/` directory under `components/dashboard/`
+- [ ] Remove `ChartWidget` import and the "Live Chart" tab from `dashboard/page.tsx`
+- [ ] Remove the `activeTab` state and `TabButton` component from `dashboard/page.tsx`
+
+### 5.2 — Top Ribbon / Backtest Toolbar
+
+Move all engine inputs from `BacktestWidget` (right panel) into a compact 48px horizontal toolbar above the chart. `BacktestWidget` is replaced by `BacktestToolbar`.
+
+All input selectors (`AssetSelector`, `DurationSelector`, `TimeframeSelector`, `CashSelector`, `StrategySelector`) already exist as ref-based components — they only need a new parent container.
+
+- [ ] Create `web/src/components/dashboard/toolbar/BacktestToolbar.tsx`
+  - Single `<div>` row, 48px height, `border-b border-border-subtle bg-surface-card`
+  - Imports and lays out all five existing selector refs in a horizontal flex row
+  - Includes the "▶ Run Backtest" button (same `handleRun` logic as `BacktestWidget`)
+  - Calls `onResult(data)` callback to pass backtest result up to the page
+- [ ] Remove `BacktestWidget` from `dashboard/page.tsx`; render `BacktestToolbar` between Header and chart
+- [ ] Delete `web/src/components/dashboard/backtest/BacktestWidget.tsx` once toolbar is wired
+
+### 5.3 — Collapsible AI Chat Sidebar
+
+`ChatWidget` content is already correct — only its container changes. The right panel becomes a fixed 300px sidebar that can be toggled closed.
+
+- [ ] In `dashboard/page.tsx`, replace the `react-resizable-panels` layout with a plain `flex` row:
+  - Left: `flex-1 min-w-0` chart workspace
+  - Right: `w-[300px] shrink-0` sidebar, hidden when closed (`hidden` or `w-0 overflow-hidden`)
+- [ ] Add a chevron toggle button on the right edge of the chart area to open/close the sidebar
+- [ ] Persist sidebar open/closed state in `localStorage` key `"chatSidebarOpen"`
+- [ ] Remove `react-resizable-panels` import from `dashboard/page.tsx` (can keep the package for now in case it's used elsewhere; remove it from `package.json` when confirmed unused)
+
+### 5.4 — Metrics Bottom Strip + Drawer
+
+Replace the always-visible two-column metrics block below the chart with a compact 40px strip and an expandable drawer.
+
+The existing `Metrics.tsx` rendering logic (MetricItem, ComparisonTable) is reused inside the drawer — no metrics calculation changes.
+
+- [ ] Create `web/src/components/dashboard/backtest/MetricsStrip.tsx`
+  - 40px height, single flex row of KPI chips: Trades · Win Rate · Sharpe · Max Drawdown · Total Return
+  - Shows dashes (`—`) before a backtest runs; chips populate on `setData()`
+  - Clicking any chip (or a dedicated expand icon) sets `drawerOpen = true`
+  - `setData()` exposed via `useImperativeHandle` (same pattern as `Metrics`)
+- [ ] Create `web/src/components/dashboard/backtest/MetricsDrawer.tsx`
+  - Full metrics detail (reuses `MetricItem` and `ComparisonTable` from `Metrics.tsx`)
+  - Slides up from bottom or overlays with `fixed bottom-0`; closes on click-outside or Escape
+- [ ] Update `BacktestResultsPanel.tsx` to render `MetricsStrip` instead of `Metrics`
+- [ ] Keep `Metrics.tsx` until drawer is wired; then consolidate or delete
+
+### 5.5 — Dependency Cleanup
+
+- [ ] Remove `recharts` from `web/package.json` (confirmed zero usage in source)
+- [ ] Remove `openai` from `web/package.json` (confirmed zero usage in source)
+- [ ] Remove `backtrader` from `backend/requirements.txt` (not imported in any source file)
+- [ ] Remove `mplfinance` and `matplotlib` from `backend/requirements.txt` if confirmed unused after full audit
+
+### 5.6 — Deliverables & Verification
+
+- [ ] `dashboard/page.tsx` — new layout: ribbon + chart workspace + collapsible sidebar
+- [ ] `toolbar/BacktestToolbar.tsx` — all engine inputs in a 48px ribbon
+- [ ] `ChartWidget.tsx` deleted; `chart/` directory deleted
+- [ ] `BacktestWidget.tsx` deleted
+- [ ] `MetricsStrip.tsx` + `MetricsDrawer.tsx`
+- [ ] Zero regressions: backtest runs, chart renders, SSE chat works, strategy card appears
+- [ ] `npm run build` passes with zero TypeScript errors
+- [ ] Sidebar open/close toggle works and persists on page refresh
 
 ---
 
-## Phase 3 — Engine Integrity (Complete)
+## Phase 6 — Landing Pages & UX Transitions
 
-**Goal**: The simulator must produce financially correct results before any user-facing feature is built on top of it. Every item in this phase is a blocker for Phase 4.
+**Goal**: Professional marketing pages and smooth loading transitions to the dashboard.
 
-### 3.1 — Critical Bug Fixes
+### 6.1 — Home Page Overhaul
 
-These are correctness bugs — the engine produces wrong numbers today.
+- [ ] Hero section: headline, sub-headline, single CTA ("Start for free")
+- [ ] Feature grid: 3–4 cards (AI generation, backtesting, metrics, no-code)
+- [ ] Demo/preview section: static screenshot of the Phase 5 dashboard
+- [ ] Pricing section (mirroring Phase 7 tiers)
+- [ ] Footer: links, legal
 
-| # | Bug | File | Fix |
+### 6.2 — About Page
+
+- [ ] Mission statement, tech stack callouts, team section (placeholder-ready)
+- [ ] Consistent dark theme using design tokens from `globals.css`
+
+### 6.3 — Loading Transitions
+
+- [ ] `next/dynamic` with `loading` skeleton for heavy dashboard components (chart, chat)
+- [ ] `DashboardSkeleton.tsx` — placeholder panels matching Phase 5 layout
+- [ ] `opacity` fade-in via Tailwind on dashboard mount (eliminates white flash on hydration)
+
+### 6.4 — Deliverables
+
+- [ ] `web/src/app/page.tsx` — hero, features, pricing, footer
+- [ ] `web/src/app/about/page.tsx` — brand page
+- [ ] `web/src/components/DashboardSkeleton.tsx`
+- [ ] Tailwind only; no new CSS files
+
+---
+
+## Phase 7 — SaaS Monetization & Subscriptions
+
+**Goal**: Stripe-based subscription tiers, entitlement enforcement at the Next.js proxy layer, upgrade flow.
+
+### 7.1 — Subscription Tiers
+
+| Feature | Free | Pro ($29/mo) | Max ($149/mo) |
 |---|---|---|---|
-| 1 | Short trades never execute | `rule.py:75` | `Long if 'long' else Short` is always truthy; fix to `Long if self.trade_type == 'long' else Short` |
-| 2 | Same-bar entry at close | `simulator.py`, `rule.py` | Enter at `df['Open'].iloc[i+1]`, not `df['Close'].iloc[i]` of signal bar |
-| 3 | No cash accounting | `simulator.py` | Deduct `trade.cost()` from `_portfolio_value` on entry; add `cost + pnl` on close |
-| 4 | Equity wrong during open positions | `long.py`, `short.py` | Equity = cash + notional value; not just PnL delta |
-| 5 | Sizing `or 1.0` default | `rule.py:70` | Remove `or 1.0`; a sizing of 0 should suppress the trade, not default to 1 |
+| AI strategy generations | 3 / day | 50 / day | Unlimited |
+| Backtest history | 1 year | 5 years | 20+ years |
+| Saved strategies | 3 | Unlimited | Unlimited |
+| Timeframes | Daily only | All (1m → W) | All |
+| Metrics | 5 core | Full suite (15+) | Full suite |
+| Multi-asset backtest | ✗ | ✗ | Up to 10 |
+| Portfolio simulation | ✗ | ✗ | ✓ |
+| Strategy export (PDF/JSON) | ✗ | ✓ | ✓ |
+| API access | ✗ | ✗ | ✓ |
+| Support | Community | Email | Priority |
 
-**Exit criterion**: A buy-and-hold benchmark (buy at start, hold to end) produces an equity curve that matches a manual calculation to within 0.1%. Cash never goes negative. Short trades produce negative entries in the equity curve.
+### 7.2 — Stripe Integration
 
-### 3.2 — Realism Upgrades
+- [ ] Install `stripe` (Node SDK), `@stripe/stripe-js` (browser)
+- [ ] `web/src/app/api/stripe/create-checkout/route.ts` — creates Stripe Checkout Session
+- [ ] `web/src/app/api/stripe/webhook/route.ts` — handles `customer.subscription.created/updated/deleted`; writes `{ tier, stripe_customer_id, subscription_status }` to Firestore `users/{uid}`
+- [ ] `web/src/app/api/stripe/portal/route.ts` — Stripe Customer Portal session for self-serve management
+- [ ] Stripe product/price IDs stored in `.env.local`; never hardcoded
 
-| Item | Description |
-|---|---|
-| Commission model | Configurable flat fee + bps percentage, applied at `trade.close()` |
-| Slippage model | Apply to both entry and exit prices, not just PnL; configurable via `Simulator.__init__` |
-| Max open trades | `max_open_trades: int` per strategy — prevents unlimited leverage from simultaneous rules |
-| Minimum bar guard | Skip entry if `i + 1 >= len(df)` to prevent out-of-bounds on last bar |
+### 7.3 — Entitlement Enforcement (Next.js proxy layer only — FastAPI stays stateless)
 
-### 3.3 — Performance Upgrades
+- [ ] `web/src/lib/entitlements.ts` — `getUserTier(uid): "free" | "pro" | "max"` reads Firestore via Firebase Admin SDK
+- [ ] `web/src/lib/rateLimit.ts` — increments Firestore counter `usage/{uid}/daily`; resets at UTC midnight
+- [ ] `/api/chat/route.ts` — checks generation limit before proxying; returns `402 { code: "LIMIT_REACHED" }` if exceeded
+- [ ] `/api/backtest/route.ts` — checks `lookback_months` against tier limit; returns `402` if exceeded
 
-| Item | Description |
-|---|---|
-| Warm-up pre-pass | Call `series.calculate(i, df)` for all indicator series in the strategy tree before the simulation loop begins, so no indicator is computed mid-loop |
-| Unique column names | Indicators use composite keys (e.g., `EMA_14_close`) to prevent column collisions when the same indicator is used twice with different inputs |
-| Indicator tree walker | Helper function `extract_all_series(strategy)` traverses the component tree and returns all `Series` instances for the warm-up pass |
+### 7.4 — Upgrade Flow
 
-### 3.4 — Metrics Expansion
+- [ ] `web/src/components/UpgradeModal.tsx` — triggered on any `402` response; tier comparison + CTA
+- [ ] `web/src/app/pricing/page.tsx` — full pricing page; also embedded in home page
+- [ ] `useSubscription()` hook — reads Firestore tier in real time; exposes `{ tier, generationsUsedToday, canGenerate }`
 
-| Metric | Notes |
-|---|---|
-| Win rate | % of closed trades with `pnl > 0` |
-| Average trade duration | Mean number of bars held |
-| Profit factor | Gross profit / gross loss |
-| Sortino ratio | Return / downside deviation only |
-| Calmar ratio | Annualized return / max drawdown |
-| Average winner / loser | Mean PnL of winning and losing trades separately |
+### 7.5 — Deliverables & Verification
 
-### 3.5 — Deliverables
-
-- [ ] `backend/simulator/simulator.py` — cash accounting, next-bar entry, max open trades
-- [ ] `backend/strategies/rule.py` — fix Short bug, fix sizing default
-- [ ] `backend/components/trades/long.py` — fix equity calculation
-- [ ] `backend/components/trades/short.py` — fix equity calculation
-- [ ] `backend/simulator/metrics.py` — add win rate, profit factor, Sortino, Calmar
-- [ ] `backend/simulator/warmup.py` — `extract_all_series(strategy)` + warm-up pass
-- [ ] Manual test: buy-and-hold SPY 1y matches `(end_price / start_price - 1) * initial_cash` within 0.1%
-- [ ] Manual test: short strategy produces losses when asset rises
+- [ ] Stripe routes, webhook, portal
+- [ ] `entitlements.ts`, `rateLimit.ts`
+- [ ] `UpgradeModal.tsx`, `/pricing` page
+- [ ] Manual test: free user hits limit → upgrade modal; Pro user does not
+- [ ] Manual test: Stripe subscription cancel → Firestore tier reverts within one webhook cycle
 
 ---
 
-## Phase 4 — AI Strategy Generation (Current Priority)
+## Phase 8 — LLM Cost Optimisation & Multi-Provider Routing
 
-**Goal**: The LLM generates valid JSON DSL strategies from natural language. The user never writes JSON manually.
+**Goal**: Reduce per-prompt cost further via intent-based routing. Prompt caching and Haiku default are already active — what remains is separating the chat and strategy models.
 
-See `backend/ai/LLM_STRATEGY.md` for the full technical plan.
+**Current state**: `claude-haiku-4-5-20251001` is already the default model in `llm_service.py`. Prompt caching on the schema block is already implemented. This phase is lower priority than previously described.
 
-### 4.1 — LLM Service Architecture
+### 8.1 — Model Router
 
-**New file**: `backend/ai/llm_service.py`
+- [ ] `backend/ai/model_router.py` — `classify_intent(message: str) -> "chat" | "strategy"`
+  - Keyword heuristics first (regex on "generate", "build", "create", "strategy", "modify")
+  - Falls back to a single-token LLM call if ambiguous
+- [ ] Update `LLMService.__init__` to read `LLM_MODEL_STRATEGY` and `LLM_MODEL_CHAT` env vars independently (currently only `LLM_MODEL` exists)
+- [ ] Add `LLM_MODEL_STRATEGY` and `LLM_MODEL_CHAT` to `backend/.env.example`
+- [ ] Route pure chat messages to `LLM_MODEL_CHAT` (skip tool-use overhead entirely for non-strategy turns)
 
-```python
-class LLMService:
-    def __init__(self, model: str = "claude-sonnet-4-6"):
-        self.client = anthropic.Anthropic()
-        self.model = model
-        self.schema_prompt = generate_prompt()  # existing prompt.py
+### 8.2 — Model Evaluation
 
-    def generate_strategy(self, user_prompt: str) -> StrategyModel:
-        for attempt in range(MAX_RETRIES):
-            raw = self._call_llm(user_prompt, error_context=last_error)
-            try:
-                return StrategyModel.model_validate_json(raw)
-            except ValidationError as e:
-                last_error = str(e)
-        raise StrategyGenerationError(f"Failed after {MAX_RETRIES} attempts")
-```
+Test these alternatives against the 10-prompt integration test suite before committing to any:
 
-- Model injected at construction; swap via `LLM_MODEL` env var with zero code changes.
-- Retry loop (max 3) feeds the `ValidationError` back to the LLM so it can self-correct.
-- `generate_prompt()` in `backend/ai/prompt.py` is the single source of truth — updating the schema automatically updates what the LLM sees.
+| Model | Provider | Input / 1M tokens | Notes |
+|---|---|---|---|
+| DeepSeek-V3 | Fireworks AI | ~$0.90 | Best price/quality for JSON DSL |
+| Gemini 2.0 Flash | Google AI | ~$0.075 | Native JSON mode; lowest cost |
+| Claude Haiku 4.5 | Anthropic | ~$0.80 | Already default; zero infra change |
 
-### 4.2 — Prompt Caching
+- [ ] Document first-attempt Pydantic pass rate per model in `backend/ai/COST_BENCHMARK.md`
 
-The schema documentation is large (~2000 tokens) and static. Use Anthropic prompt caching:
+### 8.3 — Cost Guardrails
 
-```python
-response = self.client.messages.create(
-    model=self.model,
-    system=[
-        {"type": "text", "text": ROLE_PROMPT},
-        {"type": "text", "text": self.schema_prompt, "cache_control": {"type": "ephemeral"}},
-    ],
-    messages=[{"role": "user", "content": user_prompt}],
-)
-```
-
-At high volume: ~80% cost reduction and ~30% latency reduction on cached tokens.
-
-### 4.3 — Frontend Integration
-
-The `/api/chat` Next.js route already proxies to FastAPI. The only frontend change: if FastAPI returns a `strategy` field alongside `message`, the chat panel renders a collapsible JSON block with a "Use this strategy" button that populates the Backtest Panel.
-
-### 4.4 — Strategy Persistence
-
-- Firestore collection `users/{uid}/strategies` — save named strategies per user
-- Strategy selector widget loads user's saved strategies
-- "Save" and "Load" actions in the backtest panel
-
-### 4.5 — Deliverables
-
-- [ ] `backend/ai/llm_service.py` — `LLMService` with retry loop and prompt caching
-- [ ] `backend/ai/prompt.py` — improved few-shot examples targeting current schema
-- [ ] `backend/main.py` — `/api/chat` calls `LLMService.generate_strategy()`
-- [ ] `backend/.env.example` — document `LLM_MODEL`, `ANTHROPIC_API_KEY`
-- [ ] `requirements.txt` — add `anthropic`
-- [ ] `web/src/components/dashboard/chat/ChatWidget.tsx` — "Use this strategy" button
-- [ ] Firestore strategy persistence (save/load)
-- [ ] Integration test: 10 diverse English prompts, all pass Pydantic validation
+- [ ] Per-request token budget: reject prompts > 500 tokens before LLM call
+- [ ] Log `cache_read_input_tokens` vs `input_tokens` per request; alert if cache hit rate < 70%
 
 ---
 
-## Phase 5 — Multi-Asset and Portfolio Simulation
+## Phase 9 — Multi-Asset & Portfolio Simulation
 
-**Goal**: Simulate strategies across multiple tickers simultaneously with a shared capital pool.
+**Goal**: Simulate strategies across multiple tickers with a shared capital pool.
 
-### 5.1 — Multi-Asset Data
+### 9.1 — Multi-Asset Data
 
-- Extend `data/loader.py` to accept a list of tickers
-- Return `Dict[str, pd.DataFrame]` keyed by ticker
-- Align DataFrames on a common datetime index (outer join, forward-fill gaps)
+- [ ] Extend `data/loader.py` to accept a list of tickers; return `Dict[str, pd.DataFrame]`
+- [ ] Align DataFrames on a common datetime index (outer join, forward-fill gaps)
 
-### 5.2 — Portfolio Simulator
+### 9.2 — Portfolio Simulator
 
-- New `PortfolioSimulator` wrapping multiple `Simulator` instances
-- Shared `_portfolio_value` across all simulators
-- Allocation rules: equal-weight or user-defined sizing expressions per asset
+- [ ] `backend/simulator/portfolio_simulator.py` — wraps multiple `Simulator` instances
+- [ ] Shared `_portfolio_value` pool; allocation rules per asset
 
-### 5.3 — Portfolio Metrics
+### 9.3 — Portfolio Metrics
 
-- Portfolio-level Sharpe, drawdown, correlation matrix
-- Per-asset contribution to return
+- [ ] Portfolio-level Sharpe, drawdown, correlation matrix
+- [ ] Per-asset return contribution
 
 ---
 
-## Phase 6 — Productionization and SaaS Launch
+## Phase 10 — Infrastructure & SaaS Launch
 
-### 6.1 — Infrastructure
+### 10.1 — Deployment
 
-- Containerize FastAPI with Docker; deploy on Fly.io or Railway
-- Environment-based config via Pydantic `BaseSettings`
-- Rate limiting on `/api/backtest` and `/api/chat`
+- [ ] Containerise FastAPI with Docker; deploy on Fly.io or Railway
+- [ ] Next.js on Vercel; `NEXT_PUBLIC_BACKEND_API_URL` points to Fly.io URL in production
 
-### 6.2 — Async Backtesting
+### 10.2 — Async Backtesting
 
-- Long-running backtests (>5s) queued via Celery + Redis
-- Frontend polls a status endpoint; spinner until complete
-- Result stored in Firestore, retrieved on completion
+- [ ] Long-running backtests (>5s) queued via Celery + Redis
+- [ ] Frontend polls `/api/backtest/status/{job_id}`; result stored in Firestore
 
-### 6.3 — Observability
+### 10.3 — Observability
 
-- Structured JSON logging with request IDs
-- Sentry for both frontend and backend
-- Backtest duration and trade count logged per run
+- [ ] Structured JSON logging with request IDs (`structlog`)
+- [ ] Sentry for frontend (`@sentry/nextjs`) and backend (`sentry-sdk`)
 
-### 6.4 — Monetization
+### 10.4 — Security Hardening
 
-- Stripe: free tier (3 backtests/day, 1y lookback), Pro ($29/mo, unlimited), Team ($99/mo, multi-user)
-- Entitlement checks in Next.js API routes before proxying to FastAPI
-- Upgrade modal triggered on `402` responses
+- [ ] Firebase Admin SDK verifies ID tokens in Next.js middleware before any proxied request
+- [ ] Rate limiting on `/api/backtest` and `/api/chat` (Redis-backed, per-user)
+- [ ] CORS locked to production domain in FastAPI
 
 ---
 
 ## Dependency Map
 
 ```
-Phase 1 (Foundation) ──► Phase 2 (UI/UX)
-                              │
-                              └──► Phase 3 (Engine Integrity)
-                                        │
-                                        └──► Phase 4 (AI Pipeline)  ← CURRENT
-                                                  │
-                                                  └──► Phase 5 (Portfolio)
-                                                            │
-                                                            └──► Phase 6 (SaaS)
+Phases 1–4 (Complete) ──► Phase 5 (UI Overhaul)  ← CURRENT
+                               │
+                               ├──► Phase 6 (Landing Pages)
+                               │
+                               └──► Phase 7 (Monetisation)
+                                         │
+                                         ├──► Phase 8 (LLM Routing)
+                                         │
+                                         └──► Phase 9 (Portfolio)
+                                                   │
+                                                   └──► Phase 10 (Launch)
 ```
 
 ---
 
 ## Invariants — What Must Never Break
 
-1. Firebase authentication (login, signup, Google SSO) works.
+1. Firebase authentication (login, signup, Google SSO) works on every branch.
 2. `POST /api/backtest` returns a valid equity curve and metrics JSON.
-3. `POST /api/chat` returns a message.
+3. `POST /api/chat` returns a valid SSE stream with a `done` event.
 4. The dashboard renders without errors for an authenticated user.
 5. All Pydantic models validate the same JSON they validated before (backwards compatibility).
 6. `npm run build` passes with zero TypeScript errors.
 7. `uvicorn main:app` starts without import errors.
 8. Cash cannot go negative during any simulation.
-9. All new components follow the dual-class pattern (runtime + Pydantic model with `.build()`).
+9. All new strategy components follow the dual-class pattern (runtime + Pydantic model with `.build()`).
+10. No business logic lives in Next.js API routes beyond proxying and entitlement checks.

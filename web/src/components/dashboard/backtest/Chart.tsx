@@ -23,9 +23,9 @@ export type ChartHandle = {
 };
 
 // Quant Dark palette
-const BG_COLOR        = "#111827"; // surface-card
-const GRID_COLOR      = "#1F2D40"; // border-subtle
-const TEXT_COLOR      = "#64748B"; // content-muted
+const BG_COLOR        = "#111113"; // surface-card
+const GRID_COLOR      = "#27272A"; // border-subtle
+const TEXT_COLOR      = "#71717A"; // content-muted
 const STRATEGY_COLOR  = "#3b82f6"; // accent-blue
 const BENCHMARK_COLOR = "#f97316"; // accent-amber
 const CROSSHAIR_COLOR = "#06B6D4"; // accent-cyan
@@ -265,6 +265,9 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
     setData: (data: any) => {
       if (!stratRef.current || !benchRef.current || !candleRef.current) return;
 
+      // Wipe markers from any previous backtest before loading new data.
+      markersRef.current?.setMarkers([]);
+
       stratRef.current.setData(buildTimeSeries(data.equity_curve.simple));
       benchRef.current.setData(buildTimeSeries(data.benchmark_curve));
 
@@ -296,25 +299,25 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
   const showTooltip   = tooltip.visible && hasData && (visibility.strategy || visibility.benchmark);
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-4 border-b border-slate-800 px-4 py-2.5">
+      <div className="flex shrink-0 items-center gap-4 border-b border-zinc-800 px-4 py-2.5">
         {/* Title */}
-        <span className="shrink-0 text-sm font-semibold text-slate-100">Performance Overview</span>
+        <span className="shrink-0 text-sm font-semibold text-zinc-100">Performance Overview</span>
 
         {/* OHLC bar — appears in-header on crosshair hover, colorized by candle direction */}
         {hasData && hasOhlc && (
           <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span className="text-slate-500">
+            <span className="text-zinc-500">
               O <span className={`tabular-nums ${ohlcNumClass}`}>{tooltip.open}</span>
             </span>
-            <span className="text-slate-500">
+            <span className="text-zinc-500">
               H <span className={`tabular-nums ${ohlcNumClass}`}>{tooltip.high}</span>
             </span>
-            <span className="text-slate-500">
+            <span className="text-zinc-500">
               L <span className={`tabular-nums ${ohlcNumClass}`}>{tooltip.low}</span>
             </span>
-            <span className="text-slate-500">
+            <span className="text-zinc-500">
               C <span className={`tabular-nums ${ohlcNumClass}`}>{tooltip.close}</span>
             </span>
           </div>
@@ -324,7 +327,7 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
         <div className="flex-1" />
 
         {/* Clickable legend chips */}
-        <div className="flex items-center gap-4 text-xs text-slate-400">
+        <div className="flex items-center gap-4 text-xs text-zinc-400">
           <button
             onClick={() => handleToggle("price")}
             className={`flex cursor-pointer items-center gap-1.5 transition-opacity duration-150 ${visibility.price ? "opacity-100" : "opacity-30"}`}
@@ -355,19 +358,19 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
 
         {/* Placeholder overlay before any data arrives */}
         {!hasData && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900">
-            <div className="mb-3 rounded-full bg-slate-800 p-4">
-              <FiBarChart2 className="h-8 w-8 text-slate-500" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950">
+            <div className="mb-3 rounded-full bg-zinc-800 p-4">
+              <FiBarChart2 className="h-8 w-8 text-zinc-500" />
             </div>
-            <p className="text-sm font-medium text-slate-500">No performance data</p>
-            <p className="mt-1 text-xs text-slate-600">Run a backtest to see the equity curve</p>
+            <p className="text-sm font-medium text-zinc-500">No performance data</p>
+            <p className="mt-1 text-xs text-zinc-600">Run a backtest to see the equity curve</p>
           </div>
         )}
 
         {/* Floating crosshair tooltip — only renders when at least one line is visible */}
         {showTooltip && (
           <div
-            className="pointer-events-none absolute z-20 min-w-[140px] rounded-lg border border-slate-700 bg-slate-900/90 p-2.5 text-xs shadow-xl backdrop-blur-sm"
+            className="pointer-events-none absolute z-20 min-w-[140px] rounded-lg border border-zinc-700 bg-zinc-950/90 p-2.5 text-xs shadow-xl backdrop-blur-sm"
             style={{
               left: Math.min(tooltip.x + 15, (containerRef.current?.offsetWidth  ?? 300) - 155),
               top:  Math.min(tooltip.y + 15, (containerRef.current?.offsetHeight ?? 200) -  70),
@@ -376,20 +379,20 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
             <div className="flex flex-col gap-1">
               {visibility.strategy && (
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1.5 text-slate-400">
+                  <span className="flex items-center gap-1.5 text-zinc-400">
                     <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: STRATEGY_COLOR }} />
                     Strategy
                   </span>
-                  <span className="font-semibold tabular-nums text-slate-100">{tooltip.strategy}</span>
+                  <span className="font-semibold tabular-nums text-zinc-100">{tooltip.strategy}</span>
                 </div>
               )}
               {visibility.benchmark && (
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1.5 text-slate-400">
+                  <span className="flex items-center gap-1.5 text-zinc-400">
                     <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: BENCHMARK_COLOR }} />
                     Benchmark
                   </span>
-                  <span className="font-semibold tabular-nums text-slate-100">{tooltip.benchmark}</span>
+                  <span className="font-semibold tabular-nums text-zinc-100">{tooltip.benchmark}</span>
                 </div>
               )}
             </div>

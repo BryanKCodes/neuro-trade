@@ -29,13 +29,13 @@ function formatNumberFull(input: any) {
 }
 
 const MetricItem = ({ label, value, icon, isPositive }: { label: string; value: string | number; icon?: ReactNode; isPositive?: boolean | null; }) => (
-  <div className="group flex items-start gap-2.5 rounded-lg p-2.5 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 group-hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-slate-700 [&>svg]:h-4 [&>svg]:w-4">
+  <div className="group flex items-start gap-2.5 rounded-lg p-2.5 transition-all duration-200 hover:bg-zinc-800/60">
+    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-400 group-hover:bg-zinc-700 [&>svg]:h-4 [&>svg]:w-4">
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <div className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">{label}</div>
-      <div className={`text-base font-semibold ${isPositive === true ? 'text-emerald-600 dark:text-emerald-400' : isPositive === false ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>
+      <div className="text-xs font-medium text-zinc-400 whitespace-nowrap">{label}</div>
+      <div className={`text-base font-semibold ${isPositive === true ? 'text-emerald-400' : isPositive === false ? 'text-red-400' : 'text-zinc-100'}`}>
         {value}
       </div>
     </div>
@@ -43,21 +43,21 @@ const MetricItem = ({ label, value, icon, isPositive }: { label: string; value: 
 );
 
 const ComparisonTable = ({ data }: { data: any }) => (
-  <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+  <div className="overflow-hidden rounded-lg border border-zinc-800">
     <table className="w-full text-left">
-      <thead className="bg-slate-50 dark:bg-slate-800/50">
+      <thead className="bg-zinc-800/50">
         <tr>
-          <th className="px-4 py-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Metric</th>
-          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">Strategy</th>
-          <th className="px-4 py-3 text-right text-sm font-semibold text-slate-900 dark:text-slate-100">Benchmark</th>
+          <th className="px-4 py-3 text-sm font-semibold text-zinc-100">Metric</th>
+          <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-100">Strategy</th>
+          <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-100">Benchmark</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+      <tbody className="divide-y divide-zinc-800">
         {Object.entries(data).map(([metric, values]: any, index) => (
-          <tr key={metric} className={`transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/25'}`}>
-            <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">{metric}</td>
-            <td className="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-slate-100">{formatNumberFull(values.Strategy) ?? "—"}</td>
-            <td className="px-4 py-3 text-right text-sm font-medium text-slate-600 dark:text-slate-400">{formatNumberFull(values.Benchmark) ?? "—"}</td>
+          <tr key={metric} className={`transition-colors hover:bg-zinc-800/60 ${index % 2 === 0 ? 'bg-zinc-900' : 'bg-zinc-800/25'}`}>
+            <td className="px-4 py-3 text-sm font-medium text-zinc-100">{metric}</td>
+            <td className="px-4 py-3 text-right text-sm font-medium text-zinc-100">{formatNumberFull(values.Strategy) ?? "—"}</td>
+            <td className="px-4 py-3 text-right text-sm font-medium text-zinc-400">{formatNumberFull(values.Benchmark) ?? "—"}</td>
           </tr>
         ))}
       </tbody>
@@ -99,8 +99,8 @@ const Metrics = forwardRef<MetricsHandle>((_, ref) => {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h3 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold text-zinc-100">
           Key Metrics
         </h3>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
@@ -109,7 +109,7 @@ const Metrics = forwardRef<MetricsHandle>((_, ref) => {
           ))}
         </div>
       </div>
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-sm">
         <ComparisonTable data={metricData.Comparison} />
       </div>
     </div>

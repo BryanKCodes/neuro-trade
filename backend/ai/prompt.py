@@ -40,163 +40,18 @@ the complete updated strategy — not just the changed portion.\
 # BLOCK B — Schema Documentation + Few-Shot Examples (~2000 tokens, prompt-cached)
 # ===================================================================
 
+# Two compact examples. JSON is not indented to minimise token count.
 _FEW_SHOT_EXAMPLES = [
     {
         "title": "RSI Mean Reversion (Long)",
-        "description": (
-            "Enter long when RSI(14) dips below 30 (oversold). "
-            "Exit when RSI recovers above 70. "
-            "Stop loss at 2× ATR below entry, take profit at 3× ATR above entry. "
-            "Position size risks 2% of cash per trade."
-        ),
-        "strategy": {
-            "rules": [
-                {
-                    "trade": "long",
-                    "filter": {"type": "TruePredicate"},
-                    "entry": {
-                        "type": "Threshold",
-                        "below": {"type": "RSI", "period": 14},
-                        "above": {"type": "Number", "value": 30}
-                    },
-                    "exit": {
-                        "type": "Threshold",
-                        "below": {"type": "Number", "value": 70},
-                        "above": {"type": "RSI", "period": 14}
-                    },
-                    "stop_loss": {
-                        "type": "Subtract",
-                        "left": {"type": "Price"},
-                        "right": {
-                            "type": "Multiply",
-                            "left": {"type": "ATR", "period": 14},
-                            "right": {"type": "Number", "value": 2.0}
-                        }
-                    },
-                    "take_profit": {
-                        "type": "Add",
-                        "left": {"type": "Price"},
-                        "right": {
-                            "type": "Multiply",
-                            "left": {"type": "ATR", "period": 14},
-                            "right": {"type": "Number", "value": 3.0}
-                        }
-                    },
-                    "sizing": {
-                        "type": "Divide",
-                        "left": {
-                            "type": "Multiply",
-                            "left": {"type": "Number", "value": 0.02},
-                            "right": {"type": "Cash"}
-                        },
-                        "right": {"type": "ATR", "period": 14}
-                    }
-                }
-            ]
-        }
+        "description": "Long when RSI(14)<30; exit when RSI>70. SL=price-2×ATR, TP=price+3×ATR. Size=2% cash/ATR.",
+        "strategy": {"rules": [{"trade": "long", "filter": {"type": "TruePredicate"}, "entry": {"type": "Threshold", "below": {"type": "RSI", "period": 14}, "above": {"type": "Number", "value": 30}}, "exit": {"type": "Threshold", "below": {"type": "Number", "value": 70}, "above": {"type": "RSI", "period": 14}}, "stop_loss": {"type": "Subtract", "left": {"type": "Price"}, "right": {"type": "Multiply", "left": {"type": "ATR", "period": 14}, "right": {"type": "Number", "value": 2.0}}}, "take_profit": {"type": "Add", "left": {"type": "Price"}, "right": {"type": "Multiply", "left": {"type": "ATR", "period": 14}, "right": {"type": "Number", "value": 3.0}}}, "sizing": {"type": "Divide", "left": {"type": "Multiply", "left": {"type": "Number", "value": 0.02}, "right": {"type": "Cash"}}, "right": {"type": "ATR", "period": 14}}}]},
     },
     {
         "title": "SMA Golden Cross (Long)",
-        "description": (
-            "Enter long when the 50-period SMA crosses above the 200-period SMA (golden cross). "
-            "Exit when SMA(50) crosses back below SMA(200) (death cross). "
-            "Stop loss at 2.5× ATR below entry. No hard take-profit — exit predicate manages the close. "
-            "Position size risks 2% of cash per trade."
-        ),
-        "strategy": {
-            "rules": [
-                {
-                    "trade": "long",
-                    "filter": {"type": "TruePredicate"},
-                    "entry": {
-                        "type": "Crossover",
-                        "first": {"type": "SMA", "period": 50},
-                        "second": {"type": "SMA", "period": 200},
-                        "direction": "above"
-                    },
-                    "exit": {
-                        "type": "Crossover",
-                        "first": {"type": "SMA", "period": 50},
-                        "second": {"type": "SMA", "period": 200},
-                        "direction": "below"
-                    },
-                    "stop_loss": {
-                        "type": "Subtract",
-                        "left": {"type": "Price"},
-                        "right": {
-                            "type": "Multiply",
-                            "left": {"type": "ATR", "period": 14},
-                            "right": {"type": "Number", "value": 2.5}
-                        }
-                    },
-                    "take_profit": {"type": "NoneExpression"},
-                    "sizing": {
-                        "type": "Divide",
-                        "left": {
-                            "type": "Multiply",
-                            "left": {"type": "Number", "value": 0.02},
-                            "right": {"type": "Cash"}
-                        },
-                        "right": {"type": "ATR", "period": 14}
-                    }
-                }
-            ]
-        }
+        "description": "Long on SMA(50) crossing above SMA(200); exit on death cross. SL=price-2.5×ATR, no TP. Size=2% cash/ATR.",
+        "strategy": {"rules": [{"trade": "long", "filter": {"type": "TruePredicate"}, "entry": {"type": "Crossover", "first": {"type": "SMA", "period": 50}, "second": {"type": "SMA", "period": 200}, "direction": "above"}, "exit": {"type": "Crossover", "first": {"type": "SMA", "period": 50}, "second": {"type": "SMA", "period": 200}, "direction": "below"}, "stop_loss": {"type": "Subtract", "left": {"type": "Price"}, "right": {"type": "Multiply", "left": {"type": "ATR", "period": 14}, "right": {"type": "Number", "value": 2.5}}}, "take_profit": {"type": "NoneExpression"}, "sizing": {"type": "Divide", "left": {"type": "Multiply", "left": {"type": "Number", "value": 0.02}, "right": {"type": "Cash"}}, "right": {"type": "ATR", "period": 14}}}]},
     },
-    {
-        "title": "RSI Overbought Short",
-        "description": (
-            "Enter short when RSI(14) rises above 70 (overbought). "
-            "Exit the short when RSI falls back below 30. "
-            "For a short, stop loss is ABOVE entry (2× ATR) and take profit is BELOW entry (3× ATR). "
-            "Position size risks 2% of cash per trade."
-        ),
-        "strategy": {
-            "rules": [
-                {
-                    "trade": "short",
-                    "filter": {"type": "TruePredicate"},
-                    "entry": {
-                        "type": "Threshold",
-                        "below": {"type": "Number", "value": 70},
-                        "above": {"type": "RSI", "period": 14}
-                    },
-                    "exit": {
-                        "type": "Threshold",
-                        "below": {"type": "RSI", "period": 14},
-                        "above": {"type": "Number", "value": 30}
-                    },
-                    "stop_loss": {
-                        "type": "Add",
-                        "left": {"type": "Price"},
-                        "right": {
-                            "type": "Multiply",
-                            "left": {"type": "ATR", "period": 14},
-                            "right": {"type": "Number", "value": 2.0}
-                        }
-                    },
-                    "take_profit": {
-                        "type": "Subtract",
-                        "left": {"type": "Price"},
-                        "right": {
-                            "type": "Multiply",
-                            "left": {"type": "ATR", "period": 14},
-                            "right": {"type": "Number", "value": 3.0}
-                        }
-                    },
-                    "sizing": {
-                        "type": "Divide",
-                        "left": {
-                            "type": "Multiply",
-                            "left": {"type": "Number", "value": 0.02},
-                            "right": {"type": "Cash"}
-                        },
-                        "right": {"type": "ATR", "period": 14}
-                    }
-                }
-            ]
-        }
-    }
 ]
 
 
@@ -243,7 +98,7 @@ def build_schema_prompt() -> str:
     for ex in _FEW_SHOT_EXAMPLES:
         parts.append(f"--- {ex['title']} ---\n")
         parts.append(f"Intent: {ex['description']}\n")
-        parts.append(json.dumps(ex["strategy"], indent=2))
+        parts.append(json.dumps(ex["strategy"]))
         parts.append("\n\n")
 
     return "".join(parts)

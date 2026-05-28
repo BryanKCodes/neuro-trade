@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from backtest import run_backtest
 from ai.llm_service import LLMService
+from ai.prompt import build_schema_prompt
 
 app = FastAPI(title="NeuroTrade API")
 llm_service = LLMService()

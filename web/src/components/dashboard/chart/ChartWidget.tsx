@@ -30,7 +30,7 @@ const ChartWidget = ({ symbol = "NASDAQ:AAPL", interval = "D" }: ChartWidgetProp
         theme: "dark",
         style: "1",
         locale: "en",
-        toolbar_bg: "#111827",
+        toolbar_bg: "#111113",
         enable_publishing: false,
         allow_symbol_change: true,
       });

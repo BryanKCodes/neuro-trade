@@ -44,7 +44,7 @@ const ProfileButton = ({ align = "right" }: ProfileButtonProps) => {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center rounded-full border border-slate-200 bg-slate-50 p-1.5 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+        className="flex items-center rounded-full border border-zinc-700 bg-zinc-800 p-1.5 transition hover:bg-zinc-700"
       >
         <Image
           src="/user.png"
@@ -56,26 +56,26 @@ const ProfileButton = ({ align = "right" }: ProfileButtonProps) => {
       </button>
 
       {open && (
-        <div className={`absolute z-10 mt-2 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800
+        <div className={`absolute z-10 mt-2 w-40 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 shadow-lg
             ${align === "right" ? "left-0" : "right-0"}`
         }>
           <Link
             href="/"
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800"
           >
             <FaHouse className="inline mr-2" />
             <span>Home</span>
           </Link>
           <button
             onClick={() => alert("Edit Profile placeholder")}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-zinc-800"
           >
             <FaPenToSquare className="inline mr-2" />
             <span>Edit Profile</span>
           </button>
 
           {/* Divider */}
-            <div className="my-1 h-px bg-slate-200 dark:bg-slate-700" />
+            <div className="my-1 h-px bg-zinc-700" />
 
             <button
               onClick={handleLogout}

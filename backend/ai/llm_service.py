@@ -6,11 +6,40 @@ import anthropic
 from pydantic import ValidationError
 
 from ai.prompt import build_role_prompt, build_schema_prompt
-from ai.schemas import StrategyModel
+from ai.schemas import StrategyModel  # still needed for Pydantic validation in retry loop
 
 
 MAX_RETRIES = 3
-DEFAULT_MODEL = "claude-sonnet-4-6"
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+
+# Minimal structural schema (~300 tokens vs ~33,000 for the full Pydantic JSON schema).
+# Component documentation lives in the system prompt; Pydantic retry loop handles validation.
+_TOOL_INPUT_SCHEMA = {
+    "type": "object",
+    "required": ["rules"],
+    "properties": {
+        "rules": {
+            "type": "array",
+            "description": (
+                "List of strategy rules. Use only the component types documented "
+                "in the system prompt under EXPRESSION COMPONENTS and PREDICATE COMPONENTS."
+            ),
+            "items": {
+                "type": "object",
+                "required": ["trade", "filter", "entry", "exit", "stop_loss", "take_profit", "sizing"],
+                "properties": {
+                    "trade":       {"type": "string", "enum": ["long", "short"]},
+                    "filter":      {"type": "object", "description": "AnyPredicate"},
+                    "entry":       {"type": "object", "description": "AnyPredicate"},
+                    "exit":        {"type": "object", "description": "AnyPredicate"},
+                    "stop_loss":   {"type": "object", "description": "AnyExpression"},
+                    "take_profit": {"type": "object", "description": "AnyExpression"},
+                    "sizing":      {"type": "object", "description": "AnyExpression"},
+                },
+            },
+        }
+    },
+}
 
 
 class StrategyGenerationError(Exception):
@@ -39,7 +68,7 @@ class LLMService:
                 "reply with plain text instead. "
                 "Always include a text reply summarising the strategy alongside this tool call."
             ),
-            "input_schema": StrategyModel.model_json_schema(),
+            "input_schema": _TOOL_INPUT_SCHEMA,
             "cache_control": {"type": "ephemeral"},
         }
 
@@ -60,7 +89,8 @@ class LLMService:
                    and emits a `strategy` or `error` event.
         Always ends with a `done` event.
         """
-        system = self._build_system(current_strategy)
+        system = self._build_system()
+        messages = self._inject_strategy(messages, current_strategy)
 
         # ── Phase 1: Stream ──────────────────────────────────────────
         full_text = ""
@@ -164,33 +194,30 @@ class LLMService:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _build_system(self, current_strategy: dict | None) -> list[dict]:
-        blocks = [
-            {
-                "type": "text",
-                "text": self._role_prompt,
-                "cache_control": {"type": "ephemeral"},
-            },
-            {
-                "type": "text",
-                "text": self._schema_prompt,
-                "cache_control": {"type": "ephemeral"},
-            },
+    def _build_system(self) -> list[dict]:
+        # Fully static — never changes between requests, so both cache checkpoints hit reliably.
+        # Role prompt (~376 tokens) has no cache_control: below Sonnet's 1024-token minimum.
+        return [
+            {"type": "text", "text": self._role_prompt},
+            {"type": "text", "text": self._schema_prompt, "cache_control": {"type": "ephemeral"}},
         ]
-        if current_strategy is not None:
-            context = (
-                "The user's current active strategy is shown below. "
-                "When the user asks to modify it, call update_strategy with "
-                "the complete updated strategy.\n\n"
-                + json.dumps(current_strategy, indent=2)
-            )
-        else:
-            context = (
-                "The user has no active strategy yet. "
-                "When they describe one, generate it from scratch."
-            )
-        blocks.append({"type": "text", "text": context})
-        return blocks
+
+    def _inject_strategy(
+        self, messages: list[dict[str, Any]], current_strategy: dict | None
+    ) -> list[dict[str, Any]]:
+        # Strategy context goes in the dynamic messages layer so it never sits between
+        # a cache checkpoint and the tool definition (which would break tool caching).
+        if current_strategy is None:
+            return messages
+        context_prefix = (
+            "[Current active strategy — modify this when the user asks for changes]\n"
+            + json.dumps(current_strategy, indent=2)
+            + "\n\n---\n"
+        )
+        injected = list(messages)
+        last = injected[-1]
+        injected[-1] = {**last, "content": context_prefix + last["content"]}
+        return injected
 
     def _extract_content(self, response) -> tuple[str, Any | None]:
         text = ""

@@ -91,9 +91,13 @@ const BacktestWidget = ({ onResult }: BacktestWidgetProps) => {
         </button>
       </div>
 
-      {/* Collapsible body */}
-      {!isCollapsed && (
-        <>
+      {/* Collapsible body — grid-rows animation gives smooth height transition */}
+      <div
+        className={`grid transition-all duration-200 ease-in-out ${
+          isCollapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 p-3">
             <div className="flex flex-col gap-1">
               <FieldLabel>Asset</FieldLabel>
@@ -140,8 +144,8 @@ const BacktestWidget = ({ onResult }: BacktestWidgetProps) => {
               RUN BACKTEST
             </button>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 };
