@@ -15,6 +15,10 @@ export type DurationSelectorHandle = {
   getData: () => number;
 };
 
+type DurationSelectorProps = {
+  onChange?: (days: number) => void;
+};
+
 const MAX_DAYS = 3650; // backstop used only by getData()
 
 const unitToDays = {
@@ -34,7 +38,7 @@ const maxPerUnit: Record<string, number> = {
 type Unit = keyof typeof unitToDays;
 
 const DurationSelector = forwardRef(function DurationSelector(
-  _props,
+  { onChange }: DurationSelectorProps,
   ref: ForwardedRef<DurationSelectorHandle>
 ) {
   const [value, setValue] = useState<string>("30");
@@ -59,12 +63,14 @@ const DurationSelector = forwardRef(function DurationSelector(
   const handleBlur = () => {
     if (value.trim() === "") {
       setValue("1");
+      onChange?.(unitToDays["days"]);
       return;
     }
     let num = Number(value);
     if (num < 1) num = 1;
     if (num > maxPerUnit[unit]) num = maxPerUnit[unit];
     setValue(String(num));
+    onChange?.(Math.min(num * unitToDays[unit], MAX_DAYS));
   };
 
   const handleUnitChange = (item: string) => {
@@ -76,15 +82,15 @@ const DurationSelector = forwardRef(function DurationSelector(
   };
 
   return (
-    <div className="flex h-full items-center text-sm text-black dark:text-white">
+    <div className="flex h-full items-center text-sm text-content-primary">
       {/* Icon + Number */}
       <div
         className={clsx(
-          "flex h-full items-center px-2 rounded-md",
-          "hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+          "flex h-full items-center px-2",
+          "hover:bg-surface-raised transition-colors"
         )}
       >
-        <FiClock className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+        <FiClock className="w-4 h-4 text-content-muted" />
         <input
           type="text"
           inputMode="numeric"
@@ -93,7 +99,7 @@ const DurationSelector = forwardRef(function DurationSelector(
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}
-          className="pl-4 bg-transparent focus:outline-none text-black dark:text-white"
+          className="pl-2 bg-transparent focus:outline-none text-content-primary"
           style={{
             width: `${Math.max(value.length, 1) + 2}ch`,
           }}

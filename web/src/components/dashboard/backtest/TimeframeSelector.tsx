@@ -15,6 +15,10 @@ export type TimeframeSelectorHandle = {
   getData: () => string;
 };
 
+type TimeframeSelectorProps = {
+  onChange?: (timeframe: string) => void;
+};
+
 const SHORTHANDS: Record<string, string> = {
   "1m": "1m",
   "2m": "2m",
@@ -54,8 +58,8 @@ const GROUPS = {
 
 const QUICK_TABS = ["1m", "30m", "1h"];
 
-const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
-  (_props, ref) => {
+const TimeframeSelector = forwardRef<TimeframeSelectorHandle, TimeframeSelectorProps>(
+  ({ onChange }, ref) => {
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [selected, setSelected] = useState("1d");
     const [customTab, setCustomTab] = useState("1d");
@@ -63,6 +67,7 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
 
     const handleTabClick = (tf: string) => {
       setSelected(tf);
+      onChange?.(tf);
     };
 
     const handleDropdownSelect = (tf: string) => {
@@ -71,6 +76,7 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
         setCustomTab(tf);
       }
       setDropdownOpen(false);
+      onChange?.(tf);
     };
 
     useEffect(() => {
@@ -88,17 +94,17 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
     }));
 
     return (
-      <div className="relative flex items-center gap-2 h-full">
+      <div className="relative flex items-center h-full">
         {/* Quick tabs */}
         {QUICK_TABS.map((tf) => (
           <button
             key={tf}
             onClick={() => handleTabClick(tf)}
             className={clsx(
-              "px-1 h-full rounded-md text-sm transition-colors",
-              "bg-transparent hover:bg-gray-200 dark:hover:bg-neutral-800",
-              selected === tf &&
-              "bg-gray-300 dark:bg-neutral-600 text-black dark:text-white font-medium"
+              "px-2 h-full text-sm transition-colors",
+              selected === tf
+                ? "bg-surface-raised text-content-primary font-medium"
+                : "bg-transparent text-content-muted hover:bg-surface-raised hover:text-content-primary"
             )}
           >
             {SHORTHANDS[tf] ?? tf}
@@ -109,10 +115,10 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle>(
         <button
           onClick={() => handleTabClick(customTab)}
           className={clsx(
-            "px-1 h-full rounded-md text-sm transition-colors",
-            "bg-transparent hover:bg-gray-200 dark:hover:bg-neutral-800",
-            !QUICK_TABS.includes(selected) &&
-            "bg-gray-300 dark:bg-neutral-600 text-black dark:text-white font-medium"
+            "px-2 h-full text-sm transition-colors",
+            !QUICK_TABS.includes(selected)
+              ? "bg-surface-raised text-content-primary font-medium"
+              : "bg-transparent text-content-muted hover:bg-surface-raised hover:text-content-primary"
           )}
         >
           {SHORTHANDS[customTab] ?? customTab}

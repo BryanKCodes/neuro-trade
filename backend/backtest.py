@@ -11,6 +11,8 @@ from components.trades.long import Long
 def _serialize_trades(trades, start_index: int) -> List[Dict[str, Any]]:
     markers = []
     for trade in trades:
+        if trade._size <= 0:
+            continue
         is_long = isinstance(trade, Long)
         rel_entry = trade.entry_i - start_index
         markers.append({
@@ -77,10 +79,12 @@ def run_backtest(
     df_slice = strategy_simulator.df.iloc[start:]
     price_data = [
         {
-            "open":  round(float(row.Open),  4),
-            "high":  round(float(row.High),  4),
-            "low":   round(float(row.Low),   4),
-            "close": round(float(row.Close), 4),
+            "time":   int(row.Index.timestamp()),
+            "open":   round(float(row.Open),   4),
+            "high":   round(float(row.High),   4),
+            "low":    round(float(row.Low),    4),
+            "close":  round(float(row.Close),  4),
+            "volume": int(row.Volume),
         }
         for row in df_slice.itertuples()
     ]

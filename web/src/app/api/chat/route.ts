@@ -1,129 +1,33 @@
-import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const { message } = await req.json();
+  const body = await req.json();
 
-  let reply = "Sorry I didn't understand that.";
-  if (message.startsWith('/prompt ')) {
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`;
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: message }),
-    });
-
-    const data = await res.json();
-    reply = data.reply;
-  }
-  
-  const strategyJson = {
-    "rules": [
+  let upstream: Response;
+  try {
+    upstream = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_API_URL}api/chat`,
       {
-        "trade": "long",
-        "filter": {
-          "type": "TruePredicate"
-        },
-        "entry": {
-          "type": "Or",
-          "predicates": [
-            {
-              "type": "Crossover",
-              "first": {
-                "type": "Price"
-              },
-              "second": {
-                "type": "Add",
-                "left": {
-                  "type": "EMA",
-                  "period": 20
-                },
-                "right": {
-                  "type": "ATR",
-                  "period": 14
-                }
-              }
-            },
-            {
-              "type": "Threshold",
-              "below": {
-                "type": "Subtract",
-                "left": {
-                  "type": "EMA",
-                  "period": 100
-                },
-                "right": {
-                  "type": "EMA",
-                  "period": 200
-                }
-              },
-              "above": {
-                "type": "Number",
-                "value": 0
-              }
-            }
-          ]
-        },
-        "stop_loss": {
-          "type": "Subtract",
-          "left": {
-            "type": "Price"
-          },
-          "right": {
-            "type": "Multiply",
-            "left": {
-              "type": "ATR",
-              "period": 14
-            },
-            "right": {
-              "type": "Number",
-              "value": 3.0
-            }
-          }
-        },
-        "take_profit": {
-          "type": "Add",
-          "left": {
-            "type": "Price"
-          },
-          "right": {
-            "type": "Multiply",
-            "left": {
-              "type": "ATR",
-              "period": 14
-            },
-            "right": {
-              "type": "Number",
-              "value": 3.0
-            }
-          }
-        },
-        "sizing": {
-          "type": "Divide",
-          "left": {
-            "type": "Multiply",
-            "left": {
-              "type": "Number",
-              "value": 0.02
-            },
-            "right": {
-              "type": "Cash"
-            }
-          },
-          "right": {
-            "type": "ATR",
-            "period": 14
-          }
-        },
-        "exit": {
-          "type": "FalsePredicate"
-        }
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       }
-    ]
+    );
+  } catch {
+    const errEvent =
+      `data: ${JSON.stringify({ type: "error", data: "AI service unreachable." })}\n\n` +
+      `data: ${JSON.stringify({ type: "done" })}\n\n`;
+    return new Response(errEvent, {
+      headers: { "Content-Type": "text/event-stream" },
+    });
   }
 
-  return NextResponse.json({
-    reply: reply,
-    strategy: strategyJson,
+  // Pass the SSE stream straight through to the browser.
+  return new Response(upstream.body, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    },
   });
 }

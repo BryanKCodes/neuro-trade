@@ -3,12 +3,12 @@
 
 @theme {
   /* ── Surfaces ─────────────────────────────── */
-  --color-surface-base:    #0A0E1A;
-  --color-surface-card:    #111827;
-  --color-surface-raised:  #1C2333;
+  --color-surface-base:    #0A0A0B;
+  --color-surface-card:    #111113;
+  --color-surface-raised:  #1A1A1C;
 
   /* ── Borders ──────────────────────────────── */
-  --color-border-subtle:   #1F2D40;
+  --color-border-subtle:   #27272A;
 
   /* ── Accent colors ────────────────────────── */
   --color-accent-blue:     #2563EB;
@@ -18,8 +18,8 @@
   --color-accent-amber:    #F59E0B;
 
   /* ── Text ─────────────────────────────────── */
-  --color-content-primary: #F1F5F9;
-  --color-content-muted:   #64748B;
+  --color-content-primary: #F4F4F5;
+  --color-content-muted:   #71717A;
 
   /* ── Typography ───────────────────────────── */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -36,7 +36,7 @@
 
 html, body {
   overscroll-behavior: none;
-  background: #0A0E1A;
-  color: #F1F5F9;
+  background: #0A0A0B;
+  color: #F4F4F5;
 }
 

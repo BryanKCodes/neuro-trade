@@ -16,8 +16,12 @@ export type AssetSelectorHandle = {
   getData: () => string;
 };
 
+type AssetSelectorProps = {
+  onChange?: (symbol: string) => void;
+};
+
 const AssetSelector = forwardRef(function AssetSelector(
-  _props,
+  { onChange }: AssetSelectorProps,
   ref: ForwardedRef<AssetSelectorHandle>
 ) {
   const [selectedSymbol, setSelectedSymbol] = useState("AAPL");
@@ -25,7 +29,12 @@ const AssetSelector = forwardRef(function AssetSelector(
 
   const handleClick = () => {
     openModal(
-      <AssetSearchModal onSelect={(symbol) => setSelectedSymbol(symbol)} />
+      <AssetSearchModal
+        onSelect={(symbol) => {
+          setSelectedSymbol(symbol);
+          onChange?.(symbol);
+        }}
+      />
     );
   };
 
@@ -36,11 +45,11 @@ const AssetSelector = forwardRef(function AssetSelector(
   return (
     <button
       onClick={handleClick}
-      className="flex h-full items-center gap-2 px-3 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium text-neutral-800 dark:text-neutral-200"
+      className="flex h-full items-center gap-2 px-3 transition-colors hover:bg-surface-raised text-sm font-medium text-content-primary"
     >
-      <FiSearch className="w-4 h-4 text-neutral-500" />
+      <FiSearch className="w-4 h-4 text-content-muted" />
       <span>{selectedSymbol}</span>
-      <FiChevronDown className="w-4 h-4 text-neutral-500" />
+      <FiChevronDown className="w-4 h-4 text-content-muted" />
     </button>
   );
 });
