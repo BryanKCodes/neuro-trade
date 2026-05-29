@@ -79,10 +79,12 @@ def run_backtest(
     df_slice = strategy_simulator.df.iloc[start:]
     price_data = [
         {
-            "open":  round(float(row.Open),  4),
-            "high":  round(float(row.High),  4),
-            "low":   round(float(row.Low),   4),
-            "close": round(float(row.Close), 4),
+            "time":   int(row.Index.timestamp()),
+            "open":   round(float(row.Open),   4),
+            "high":   round(float(row.High),   4),
+            "low":    round(float(row.Low),    4),
+            "close":  round(float(row.Close),  4),
+            "volume": int(row.Volume),
         }
         for row in df_slice.itertuples()
     ]

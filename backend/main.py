@@ -1,17 +1,73 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import pandas as pd
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Any, Dict, List, Literal, Optional
 
 from backtest import run_backtest
+from data.loader import load_yfinance_data
 from ai.llm_service import LLMService
 from ai.prompt import build_schema_prompt
 
 app = FastAPI(title="NeuroTrade API")
 llm_service = LLMService()
+
+
+# ===================================================================
+# OHLCV Preview Endpoint
+# ===================================================================
+
+class PreviewRequest(BaseModel):
+    asset: str
+    timeframe: str
+    # No duration — the chart always loads a large fixed window so the user
+    # can pan back in time independently of the backtest window.
+
+
+# Fixed chart-history windows per timeframe (calendar days).
+# These respect yfinance's actual data availability limits.
+_CHART_WINDOW: dict[str, int] = {
+    "1m":  7,
+    "2m":  60,
+    "5m":  60,
+    "15m": 60,
+    "30m": 60,
+    "90m": 60,
+    "1h":  730,
+    "1d":  1825,
+    "5d":  1825,
+    "1wk": 1825,
+    "1mo": 1825,
+    "3mo": 1825,
+}
+
+
+@app.post("/api/data/preview")
+def preview(req: PreviewRequest):
+    df = load_yfinance_data(req.asset, req.timeframe)
+
+    days = _CHART_WINDOW.get(req.timeframe, 1825)
+    cutoff = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days)
+    if df.index.tz is not None:
+        df = df[df.index >= cutoff]
+    else:
+        df = df[df.index >= cutoff.tz_localize(None)]
+
+    bars = [
+        {
+            "time":   int(pd.Timestamp(row.Index).timestamp()),
+            "open":   round(float(row.Open),   4),
+            "high":   round(float(row.High),   4),
+            "low":    round(float(row.Low),    4),
+            "close":  round(float(row.Close),  4),
+            "volume": int(row.Volume),
+        }
+        for row in df.itertuples()
+    ]
+    return {"bars": bars}
 
 
 # ===================================================================
