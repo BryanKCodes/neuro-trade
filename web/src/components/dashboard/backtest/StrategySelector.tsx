@@ -88,8 +88,8 @@ const StrategySelector = forwardRef<StrategySelectorHandle>((_, ref) => {
   const benchmarkItems = staticStrategies.map((s) => s.name);
 
   return (
-    <div className="flex h-full items-center gap-1 text-sm">
-      <AiOutlineLineChart className="w-4 h-4 text-inherit mr-1" />
+    <div className="flex h-full items-center gap-1 text-sm text-content-primary">
+      <AiOutlineLineChart className="w-4 h-4 text-content-muted mr-1" />
 
       {/* Left dropdown: user strategies */}
       <Dropdown

@@ -45,9 +45,9 @@ export default function Dropdown<T extends string | number>({
         setOpen(false);
       }}
       className={clsx(
-        "px-3 py-1 rounded-md text-sm cursor-pointer",
-        "hover:bg-gray-200 dark:hover:bg-neutral-800",
-        selected === item && "bg-gray-300 dark:bg-neutral-600 font-medium text-black dark:text-white"
+        "px-3 py-1 rounded-md text-sm cursor-pointer text-content-primary",
+        "hover:bg-surface-raised",
+        selected === item && "bg-surface-raised font-medium"
       )}
     >
       {renderLabel(item)}
@@ -58,25 +58,28 @@ export default function Dropdown<T extends string | number>({
 
   return (
     <div className="relative h-full" ref={dropdownRef}>
+      {/* Trigger — no border-radius so hover fills flush to toolbar edges */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-center px-1 h-full rounded-md transition-colors
-                    bg-transparent hover:bg-gray-200 dark:hover:bg-neutral-800"
+        className="flex h-full items-center justify-center px-1 transition-colors hover:bg-surface-raised text-content-primary"
       >
-        {displayLabel && <span className="px-1">{displayLabel}</span>}
-        <FiChevronDown
-          className={clsx("w-4 h-4")}
-        />
+        {displayLabel && <span className="px-1 text-sm">{displayLabel}</span>}
+        <FiChevronDown className="w-4 h-4 text-content-muted" />
       </button>
 
       {open && (
         <div
-          className={`absolute z-50 ${align === "left" ? "left-0" : "right-0"} mt-2 w-40 max-h-64 overflow-auto rounded-md border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent`}
+          className={clsx(
+            "absolute z-50 mt-1 w-44 max-h-64 overflow-auto rounded-md shadow-lg",
+            "border border-border-subtle bg-surface-card",
+            "scrollbar-thin scrollbar-thumb-border-subtle scrollbar-track-transparent",
+            align === "left" ? "left-0" : "right-0"
+          )}
         >
           {categories
             ? Object.entries(categories).map(([group, list]) => (
                 <div key={group} className="px-2 py-1">
-                  <div className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">
+                  <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-content-muted">
                     {group}
                   </div>
                   {list.map((item) => renderOption(item))}

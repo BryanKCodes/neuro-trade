@@ -44,12 +44,12 @@ const CashSelector = forwardRef(function CashSelector(
   return (
     <div
       className={clsx(
-        "flex h-full items-center gap-2 px-3 rounded-md",
-        "hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors",
-        "text-sm text-black dark:text-white"
+        "flex h-full items-center gap-1.5 px-3",
+        "hover:bg-surface-raised transition-colors",
+        "text-sm text-content-primary"
       )}
     >
-      <span className="text-gray-700 dark:text-gray-300">$</span>
+      <span className="text-content-muted">$</span>
       <input
         type="text"
         inputMode="numeric"
@@ -59,7 +59,7 @@ const CashSelector = forwardRef(function CashSelector(
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className="bg-transparent focus:outline-none text-black dark:text-white appearance-none"
+        className="bg-transparent focus:outline-none text-content-primary appearance-none"
         style={{
           width: `${(isFocused ? cash.toString() : cash.toLocaleString()).length + 1}ch`,
         }}
