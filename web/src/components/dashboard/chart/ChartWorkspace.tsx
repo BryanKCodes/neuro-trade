@@ -2,6 +2,7 @@
 
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -10,6 +11,7 @@ import { TimeSyncManager } from "@/lib/TimeSyncManager";
 import ChartHeader, { type OhlcvData } from "@/components/dashboard/chart/ChartHeader";
 import MainPane, { type MainPaneHandle } from "@/components/dashboard/chart/MainPane";
 import SubPane from "@/components/dashboard/chart/SubPane";
+import Separator from "@/components/dashboard/chart/Separator";
 import type {
   IndicatorCatalogue,
   IndicatorData,
@@ -40,6 +42,12 @@ type Props = {
 
 type VisibilityKey = "price" | "strategy" | "benchmark";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const SUBPANE_HEIGHT_KEY = "nt_subpane_height";
+const SUBPANE_MIN        = 80;
+const SUBPANE_MAX        = 300;
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const ChartWorkspace = forwardRef<ChartWorkspaceHandle, Props>(
@@ -55,6 +63,23 @@ const ChartWorkspace = forwardRef<ChartWorkspaceHandle, Props>(
     const [visibility,    setVisibility]    = useState<Record<VisibilityKey, boolean>>({
       price: true, strategy: true, benchmark: true,
     });
+    const [subPaneHeight, setSubPaneHeight] = useState(140);
+
+    useEffect(() => {
+      const stored = localStorage.getItem(SUBPANE_HEIGHT_KEY);
+      if (stored) {
+        const n = Number(stored);
+        if (!isNaN(n)) setSubPaneHeight(Math.min(SUBPANE_MAX, Math.max(SUBPANE_MIN, n)));
+      }
+    }, []);
+
+    useEffect(() => {
+      localStorage.setItem(SUBPANE_HEIGHT_KEY, String(subPaneHeight));
+    }, [subPaneHeight]);
+
+    const handleSeparatorDrag = (deltaY: number) => {
+      setSubPaneHeight((h) => Math.min(SUBPANE_MAX, Math.max(SUBPANE_MIN, h - deltaY)));
+    };
 
     const handleToggle = (key: VisibilityKey) => {
       setVisibility((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -108,7 +133,12 @@ const ChartWorkspace = forwardRef<ChartWorkspaceHandle, Props>(
           onRemove={onLegendRemove}
         />
 
-        {/* Stacked sub-panes — each renders its own legend overlay */}
+        {/* Single separator between MainPane and the sub-pane group */}
+        {subInstances.length > 0 && (
+          <Separator onDrag={handleSeparatorDrag} />
+        )}
+
+        {/* Stacked sub-panes */}
         {subInstances.map((inst) => {
           const typeDef = catalogue[inst.type_id];
           if (!typeDef) return null;
@@ -122,6 +152,7 @@ const ChartWorkspace = forwardRef<ChartWorkspaceHandle, Props>(
               syncManager={syncManager}
               onSettings={onLegendSettings}
               onRemove={onLegendRemove}
+              height={subPaneHeight}
             />
           );
         })}

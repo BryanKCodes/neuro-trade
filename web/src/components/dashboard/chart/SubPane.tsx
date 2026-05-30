@@ -178,6 +178,7 @@ type Props = {
   syncManager:   TimeSyncManager;
   onSettings:    (instance: IndicatorInstance) => void;
   onRemove:      (uuid: string) => void;
+  height?:       number;
 };
 
 const SubPane = ({
@@ -188,6 +189,7 @@ const SubPane = ({
   syncManager,
   onSettings,
   onRemove,
+  height,
 }: Props) => {
   const containerRef  = useRef<HTMLDivElement>(null);
   const chartRef      = useRef<IChartApi | null>(null);
@@ -322,7 +324,10 @@ const SubPane = ({
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="relative h-[140px] min-h-[140px] w-full shrink-0 border-t border-zinc-800">
+    <div
+      style={height !== undefined ? { height: `${height}px`, minHeight: `${height}px` } : undefined}
+      className="relative h-[140px] min-h-[140px] w-full shrink-0 border-t border-zinc-800"
+    >
       <div ref={containerRef} className="h-full w-full" />
 
       {/* Legend overlay — top-left corner */}

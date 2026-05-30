@@ -19,6 +19,7 @@ import StrategySelector, {
 } from "@/components/dashboard/toolbar/StrategySelector";
 import IndicatorPicker from "@/components/dashboard/toolbar/IndicatorPicker";
 import type { IndicatorTypeMeta } from "@/types/indicators";
+import { useToast } from "@/contexts/ToastContext";
 
 type BacktestToolbarProps = {
   onResult:        (data: unknown) => void;
@@ -38,6 +39,7 @@ const BacktestToolbar = ({
   onIndicatorSelected,
 }: BacktestToolbarProps) => {
   const [isRunning, setIsRunning] = useState(false);
+  const { showToast } = useToast();
 
   const assetRef     = useRef<AssetSelectorHandle>(null);
   const durationRef  = useRef<DurationSelectorHandle>(null);
@@ -69,6 +71,11 @@ const BacktestToolbar = ({
     const duration  = durationRef.current?.getData();
     const cash      = cashRef.current?.getData();
     const { strategy, benchmark } = strategyRef.current?.getData() ?? {};
+
+    if (!strategy) {
+      showToast("Please select or generate a strategy before running a backtest.", "warning");
+      return;
+    }
 
     setIsRunning(true);
     try {
