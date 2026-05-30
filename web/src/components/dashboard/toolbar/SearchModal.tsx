@@ -90,12 +90,6 @@ const SearchModal = ({
       onClick={() => handleSelect(item.id)}
       className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-surface-raised"
     >
-      {item.color && (
-        <span
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{ background: item.color }}
-        />
-      )}
       <span className="shrink-0 text-sm font-medium text-content-primary">
         {item.label}
       </span>

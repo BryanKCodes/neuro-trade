@@ -90,6 +90,11 @@ const BacktestToolbar = ({
     <div className="flex h-10 shrink-0 items-stretch border-b border-border-subtle bg-surface-card px-1">
       <AssetSelector ref={assetRef} onChange={handleAssetChange} />
       <Sep />
+      <IndicatorPicker
+        meta={indicatorMeta}
+        onSelect={onIndicatorSelected}
+      />
+      <Sep />
       <DurationSelector ref={durationRef} />
       <Sep />
       <TimeframeSelector ref={timeframeRef} onChange={handleTimeframeChange} />
@@ -100,12 +105,6 @@ const BacktestToolbar = ({
       <div className="flex min-w-0 flex-1 items-center">
         <StrategySelector ref={strategyRef} />
       </div>
-
-      <Sep />
-      <IndicatorPicker
-        meta={indicatorMeta}
-        onSelect={onIndicatorSelected}
-      />
 
       <button
         onClick={handleRun}

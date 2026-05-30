@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FiBarChart2 } from "react-icons/fi";
+import { FiBarChart2, FiChevronDown } from "react-icons/fi";
 import SearchModal from "@/components/dashboard/toolbar/SearchModal";
 import type { IndicatorTypeMeta } from "@/types/indicators";
 
@@ -27,10 +27,11 @@ const IndicatorPicker = ({ meta, onSelect }: Props) => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex h-full items-center gap-1.5 px-3 text-xs font-medium text-content-muted transition-colors hover:bg-surface-raised hover:text-content-primary"
+        className="flex h-full items-center gap-2 px-3 text-sm font-medium text-content-primary transition-colors hover:bg-surface-raised"
       >
-        <FiBarChart2 className="h-3.5 w-3.5 shrink-0" />
+        <FiBarChart2 className="h-4 w-4 text-content-muted" />
         <span>Indicators</span>
+        <FiChevronDown className="h-4 w-4 text-content-muted" />
       </button>
 
       {isOpen && (
