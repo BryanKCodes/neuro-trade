@@ -186,8 +186,11 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
     const stratRef        = useRef<ISeriesApi<"Line"> | null>(null);
     const benchRef        = useRef<ISeriesApi<"Line"> | null>(null);
     const markersRef      = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
-    const activeSeriesRef = useRef<Map<string, IndicatorSeries[]>>(new Map());
-    const hasPreviewRef   = useRef(false);
+    const activeSeriesRef  = useRef<Map<string, IndicatorSeries[]>>(new Map());
+    // Maps each lw-charts series → its response key (uuid or uuid+suffix).
+    // Read inside the crosshair handler (set up once) to get live legend values.
+    const seriesKeyMapRef  = useRef<Map<IndicatorSeries, string>>(new Map());
+    const hasPreviewRef    = useRef(false);
     const lastOhlcvRef    = useRef<OhlcvData | null>(null);
     const allCandlesRef   = useRef<PreviewBar[]>([]);
     const ratioRef        = useRef<number | null>(null);
@@ -197,7 +200,9 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
     const stratVisRef  = useRef(true);
     const benchVisRef  = useRef(true);
 
-    const [hasData, setHasData] = useState(false);
+    const [hasData,       setHasData]       = useState(false);
+    // Live indicator values keyed by response-key; empty when crosshair is off-chart.
+    const [legendValues,  setLegendValues]  = useState<Record<string, string>>({});
 
     // ── Chart init ─────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -300,18 +305,20 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
       // ── TimeSyncManager registration ─────────────────────────────────────────
       const unregisterSync = syncManager.register(chart, candleSeries);
 
-      // ── Crosshair → OhlcvData callback ───────────────────────────────────────
+      // ── Crosshair → OhlcvData + live legend values ───────────────────────────
       chart.subscribeCrosshairMove((param) => {
         if (!param.point || !param.time) {
           onOhlcvUpdate(lastOhlcvRef.current);
+          setLegendValues({});
           return;
         }
         type CP = { open: number; high: number; low: number; close: number };
-        const c = param.seriesData.get(candleSeries) as CP       | undefined;
-        const s = param.seriesData.get(strategySeries) as { value: number } | undefined;
+        const c = param.seriesData.get(candleSeries) as CP                   | undefined;
+        const s = param.seriesData.get(strategySeries)  as { value: number } | undefined;
         const b = param.seriesData.get(benchmarkSeries) as { value: number } | undefined;
-        const v = param.seriesData.get(volumeSeries) as { value: number } | undefined;
-        if (!c) { onOhlcvUpdate(lastOhlcvRef.current); return; }
+        const v = param.seriesData.get(volumeSeries)    as { value: number } | undefined;
+        if (!c) { onOhlcvUpdate(lastOhlcvRef.current); setLegendValues({}); return; }
+
         const ohlcv: OhlcvData = {
           open:      fmt(c.open),
           high:      fmt(c.high),
@@ -323,6 +330,18 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
           benchmark: b ? fmt(b.value) : null,
         };
         onOhlcvUpdate(ohlcv);
+
+        // Update live indicator legend values from the crosshair position.
+        const live: Record<string, string> = {};
+        seriesKeyMapRef.current.forEach((responseKey, series) => {
+          const pt = param.seriesData.get(series) as { value: number } | undefined;
+          if (pt?.value !== undefined) {
+            live[responseKey] = Math.abs(pt.value) >= 1000
+              ? pt.value.toFixed(0)
+              : pt.value.toFixed(2);
+          }
+        });
+        setLegendValues(live);
       });
 
       // ── Resize observer ───────────────────────────────────────────────────────
@@ -348,6 +367,7 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
         list.forEach((s) => chartRef.current?.removeSeries(s))
       );
       activeSeriesRef.current.clear();
+      seriesKeyMapRef.current.clear();
     };
 
     const applyMainIndicators = (
@@ -361,7 +381,14 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
         const typeDef = catalogue[inst.type_id];
         if (!typeDef || typeDef.pane !== "main" || !chartRef.current) continue;
         const added = addMainIndicator(chartRef.current, inst, typeDef, bars, indicatorData);
-        if (added.length > 0) activeSeriesRef.current.set(inst.uuid, added);
+        if (added.length > 0) {
+          activeSeriesRef.current.set(inst.uuid, added);
+          // Map each series to its response key for the crosshair handler.
+          typeDef.series_styles.forEach((st, i) => {
+            const s = added[i];
+            if (s) seriesKeyMapRef.current.set(s, inst.uuid + st.key_suffix);
+          });
+        }
       }
     };
 
@@ -558,7 +585,8 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
               const typeDef = catalogue[inst.type_id];
               if (!typeDef) return null;
               const primaryKey = inst.uuid + (typeDef.series_styles[0]?.key_suffix ?? "");
-              const value      = lastValue(indicatorData[primaryKey]);
+              // Live crosshair value when hovering; falls back to last bar value.
+              const value = legendValues[primaryKey] ?? lastValue(indicatorData[primaryKey]);
               return (
                 <div key={inst.uuid} className="pointer-events-auto">
                   <ChartLegendItem

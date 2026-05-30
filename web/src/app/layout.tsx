@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ModalProvider } from "@/contexts/ModalContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 import { UserProvider } from "@/contexts/UserContext";
 
 const inter = Inter({
@@ -33,7 +34,9 @@ const RootLayout = ({ children }: RootLayoutProps) => {
       <body>
         <AuthProvider>
           <UserProvider>
-            <ModalProvider>{children}</ModalProvider>
+            <ToastProvider>
+              <ModalProvider>{children}</ModalProvider>
+            </ToastProvider>
           </UserProvider>
         </AuthProvider>
       </body>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createChart,
   HistogramSeries,
@@ -194,6 +194,16 @@ const SubPane = ({
   const seriesRef     = useRef<IndicatorSeries[]>([]);
   const unregisterRef = useRef<(() => void) | null>(null);
 
+  // Sync latest props into refs so the crosshair handler (set up once in the
+  // init effect) always reads the current instance/typeDef without stale closure.
+  const instanceRef = useRef(instance);
+  instanceRef.current = instance;
+  const typeDefRef  = useRef(typeDef);
+  typeDefRef.current = typeDef;
+
+  // Live indicator values keyed by response-key; empty when crosshair is off.
+  const [legendValues, setLegendValues] = useState<Record<string, string>>({});
+
   // ── Chart init — runs once on mount ──────────────────────────────────────────
   useEffect(() => {
     const container = containerRef.current;
@@ -239,6 +249,28 @@ const SubPane = ({
 
     chartRef.current = chart;
 
+    // ── Crosshair → live legend values ────────────────────────────────────────
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.point || !param.time) {
+        setLegendValues({});
+        return;
+      }
+      const live: Record<string, string> = {};
+      seriesRef.current.forEach((s, i) => {
+        if (!s) return;
+        const st = typeDefRef.current.series_styles[i];
+        if (!st) return;
+        const responseKey = instanceRef.current.uuid + st.key_suffix;
+        const pt = param.seriesData.get(s) as { value: number } | undefined;
+        if (pt?.value !== undefined) {
+          live[responseKey] = Math.abs(pt.value) >= 1000
+            ? pt.value.toFixed(0)
+            : pt.value.toFixed(2);
+        }
+      });
+      setLegendValues(live);
+    });
+
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
       if (width > 0 && height > 0) chart.applyOptions({ width, height });
@@ -255,7 +287,6 @@ const SubPane = ({
       chart.remove();
       chartRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Series update — runs whenever bars, data, instance, or typeDef change ─────
@@ -283,11 +314,11 @@ const SubPane = ({
     if (newSeries.length > 0) {
       unregisterRef.current = syncManager.register(chart, newSeries[0]);
     }
-  }, [bars, indicatorData, instance, typeDef]);
+  }, [bars, indicatorData, instance, typeDef, syncManager]);
 
-  // Derive the current value for the legend from the primary series key.
+  // Live crosshair value when hovering; falls back to last bar value.
   const primaryKey   = instance.uuid + (typeDef.series_styles[0]?.key_suffix ?? "");
-  const currentValue = lastValue(indicatorData, primaryKey);
+  const currentValue = legendValues[primaryKey] ?? lastValue(indicatorData, primaryKey);
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (

@@ -9,6 +9,7 @@ import BacktestResultsPanel, {
 } from "@/components/dashboard/backtest/BacktestResultsPanel";
 import ChatWidget from "@/components/dashboard/chat/ChatWidget";
 import IndicatorSettingsModal from "@/components/dashboard/toolbar/IndicatorSettingsModal";
+import { useToast } from "@/contexts/ToastContext";
 import type {
   IndicatorCatalogue,
   IndicatorInstance,
@@ -18,12 +19,13 @@ import type {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MAX_MAIN_OVERLAYS = 3;
+const MAX_MAIN_OVERLAYS = 5;
 const MAX_SUB_PANES     = 2;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const DashboardPage = () => {
+  const { showToast }   = useToast();
   const resultsRef      = useRef<BacktestResultsHandle>(null);
   const previewAbortRef = useRef<AbortController | null>(null);
 
@@ -116,13 +118,19 @@ const DashboardPage = () => {
       const count = instances.filter(
         (i) => catalogue[i.type_id]?.pane === "main"
       ).length;
-      if (count >= MAX_MAIN_OVERLAYS) return; // TODO: surface toast
+      if (count >= MAX_MAIN_OVERLAYS) {
+        showToast(`Maximum ${MAX_MAIN_OVERLAYS} price action indicators reached.`, "warning");
+        return;
+      }
     }
     if (typeDef.pane === "sub") {
       const count = instances.filter(
         (i) => catalogue[i.type_id]?.pane === "sub"
       ).length;
-      if (count >= MAX_SUB_PANES) return; // TODO: surface toast
+      if (count >= MAX_SUB_PANES) {
+        showToast(`Maximum ${MAX_SUB_PANES} oscillating indicators reached.`, "warning");
+        return;
+      }
     }
 
     const defaultParams = Object.fromEntries(
