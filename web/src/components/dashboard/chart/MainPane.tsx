@@ -29,6 +29,7 @@ import type {
   IndicatorData,
   IndicatorInstance,
   PreviewBar,
+  SeriesStyleMeta,
 } from "@/types/indicators";
 import type { OhlcvData } from "@/components/dashboard/chart/ChartHeader";
 import type { TimeSyncManager } from "@/lib/TimeSyncManager";
@@ -107,6 +108,12 @@ function toLinePoints(
   });
 }
 
+// ─── Color resolution ─────────────────────────────────────────────────────────
+
+function resolveColor(inst: IndicatorInstance, style: SeriesStyleMeta): string {
+  return inst.colors?.[style.key_suffix] ?? style.color;
+}
+
 // ─── V2 main-pane indicator factory ──────────────────────────────────────────
 
 function addMainIndicator(
@@ -126,10 +133,11 @@ function addMainIndicator(
 
   switch (typeDef.render_type) {
     case "line": {
-      const st = typeDef.series_styles[0];
-      const s  = chart.addSeries(LineSeries, {
+      const st    = typeDef.series_styles[0];
+      const color = resolveColor(instance, st);
+      const s     = chart.addSeries(LineSeries, {
         ...base,
-        color:     st.color,
+        color,
         lineWidth: st.line_width as 1 | 2 | 3 | 4,
         lineStyle: st.line_style === "dashed" ? LineStyle.Dashed : LineStyle.Solid,
       });
@@ -138,9 +146,10 @@ function addMainIndicator(
     }
     case "band": {
       return typeDef.series_styles.map((st) => {
-        const s = chart.addSeries(LineSeries, {
+        const color = resolveColor(instance, st);
+        const s     = chart.addSeries(LineSeries, {
           ...base,
-          color:     st.color,
+          color,
           lineWidth: st.line_width as 1 | 2 | 3 | 4,
           lineStyle: st.line_style === "dashed" ? LineStyle.Dashed : LineStyle.Solid,
         });
@@ -219,16 +228,14 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
             labelBackgroundColor: CROSSHAIR_COLOR,
           },
         },
-        leftPriceScale: {
-          visible: true, borderColor: GRID_COLOR, autoScale: true,
-          scaleMargins: { top: 0.1, bottom: 0.1 },
-        },
+        leftPriceScale: { visible: false },
         rightPriceScale: {
           visible: true, borderColor: GRID_COLOR, autoScale: true,
-          scaleMargins: { top: 0.1, bottom: 0.1 },
+          scaleMargins: { top: 0.1, bottom: 0.1 }, minimumWidth: 70,
         },
         timeScale: {
           borderColor: GRID_COLOR, timeVisible: false, rightOffset: 4,
+          fixLeftEdge: true, fixRightEdge: true,
         },
         handleScale: true, handleScroll: true,
       });
@@ -544,9 +551,9 @@ const MainPane = forwardRef<MainPaneHandle, Props>(
           </div>
         )}
 
-        {/* Indicator legend items — stacked vertically, offset past the left Y-axis */}
+        {/* Indicator legend items — top-left corner */}
         {instances.length > 0 && (
-          <div className="pointer-events-none absolute left-20 top-10 z-10 flex flex-col gap-1">
+          <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-col gap-1">
             {instances.map((inst) => {
               const typeDef = catalogue[inst.type_id];
               if (!typeDef) return null;
