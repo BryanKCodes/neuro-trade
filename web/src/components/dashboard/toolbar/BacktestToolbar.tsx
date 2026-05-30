@@ -18,21 +18,26 @@ import StrategySelector, {
   StrategySelectorHandle,
 } from "@/components/dashboard/toolbar/StrategySelector";
 import IndicatorPicker from "@/components/dashboard/toolbar/IndicatorPicker";
-import type { IndicatorMeta } from "@/types/indicators";
+import type { IndicatorTypeMeta } from "@/types/indicators";
 
 type BacktestToolbarProps = {
   onResult:        (data: unknown) => void;
-  onPreviewNeeded: (asset: string, timeframe: string, indicators: string[]) => void;
-  indicatorMeta:   IndicatorMeta[];
+  onPreviewNeeded: (asset: string, timeframe: string) => void;
+  indicatorMeta:   IndicatorTypeMeta[];
+  onIndicatorSelected: (typeId: string) => void;
 };
 
 const Sep = () => (
   <div className="mx-0.5 h-5 w-px shrink-0 self-center bg-border-subtle" />
 );
 
-const BacktestToolbar = ({ onResult, onPreviewNeeded, indicatorMeta }: BacktestToolbarProps) => {
-  const [isRunning,            setIsRunning]            = useState(false);
-  const [selectedIndicatorIds, setSelectedIndicatorIds] = useState<string[]>([]);
+const BacktestToolbar = ({
+  onResult,
+  onPreviewNeeded,
+  indicatorMeta,
+  onIndicatorSelected,
+}: BacktestToolbarProps) => {
+  const [isRunning, setIsRunning] = useState(false);
 
   const assetRef     = useRef<AssetSelectorHandle>(null);
   const durationRef  = useRef<DurationSelectorHandle>(null);
@@ -43,26 +48,18 @@ const BacktestToolbar = ({ onResult, onPreviewNeeded, indicatorMeta }: BacktestT
   const getAsset     = () => assetRef.current?.getData()     ?? "AAPL";
   const getTimeframe = () => timeframeRef.current?.getData() ?? "1d";
 
-  // Fire an initial preview on mount so the chart is immediately populated.
   useEffect(() => {
-    onPreviewNeeded(getAsset(), getTimeframe(), selectedIndicatorIds);
+    onPreviewNeeded(getAsset(), getTimeframe());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAssetChange = (asset: string) => {
-    onPreviewNeeded(asset, getTimeframe(), selectedIndicatorIds);
+    onPreviewNeeded(asset, getTimeframe());
   };
 
   const handleTimeframeChange = (timeframe: string) => {
-    onPreviewNeeded(getAsset(), timeframe, selectedIndicatorIds);
+    onPreviewNeeded(getAsset(), timeframe);
   };
-
-  const handleIndicatorsChange = (ids: string[]) => {
-    setSelectedIndicatorIds(ids);
-    onPreviewNeeded(getAsset(), getTimeframe(), ids);
-  };
-
-  // Duration changes only affect the backtest — no preview re-fetch needed.
 
   async function handleRun() {
     if (isRunning) return;
@@ -76,9 +73,9 @@ const BacktestToolbar = ({ onResult, onPreviewNeeded, indicatorMeta }: BacktestT
     setIsRunning(true);
     try {
       const res = await fetch("/api/backtest", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ asset, timeframe, duration, cash, strategy, benchmark }),
+        body:    JSON.stringify({ asset, timeframe, duration, cash, strategy, benchmark }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       onResult(await res.json());
@@ -101,8 +98,7 @@ const BacktestToolbar = ({ onResult, onPreviewNeeded, indicatorMeta }: BacktestT
       <Sep />
       <IndicatorPicker
         meta={indicatorMeta}
-        selectedIds={selectedIndicatorIds}
-        onChange={handleIndicatorsChange}
+        onSelect={onIndicatorSelected}
       />
       <Sep />
 
