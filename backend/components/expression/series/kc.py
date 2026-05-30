@@ -28,24 +28,16 @@ class KC(Series):
     def calculator(self, df: pd.DataFrame) -> pd.Series:
         kc_df = ta.kc(df['High'], df['Low'], df['Close'], length=self.period, scalar=self.multiplier)
 
-        # Define column names from pandas_ta
-        upper_col = f'KCUe_{self.period}_{self.multiplier}.0'
-        mid_col = f'KCBe_{self.period}_{self.multiplier}.0'
-        lower_col = f'KCle_{self.period}_{self.multiplier}.0'
+        upper_col = next(c for c in kc_df.columns if c.startswith("KCU"))
+        mid_col   = next(c for c in kc_df.columns if c.startswith("KCB"))
+        lower_col = next(c for c in kc_df.columns if c.startswith("KCl") or c.startswith("KCL"))
 
-        # Cache all components
-        if upper_col not in df.columns:
-            df[upper_col] = kc_df[upper_col]
-        if mid_col not in df.columns:
-            df[mid_col] = kc_df[mid_col]
-        if lower_col not in df.columns:
-            df[lower_col] = kc_df[lower_col]
+        if upper_col not in df.columns: df[upper_col] = kc_df[upper_col]
+        if mid_col   not in df.columns: df[mid_col]   = kc_df[mid_col]
+        if lower_col not in df.columns: df[lower_col] = kc_df[lower_col]
 
-        # Return the requested output
-        if self.output == 'upper':
-            return df[upper_col]
-        if self.output == 'mid':
-            return df[mid_col]
+        if self.output == 'upper': return df[upper_col]
+        if self.output == 'mid':   return df[mid_col]
         return df[lower_col]
 
 

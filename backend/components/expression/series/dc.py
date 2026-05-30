@@ -26,24 +26,16 @@ class DC(Series):
     def calculator(self, df: pd.DataFrame) -> pd.Series:
         dc_df = ta.donchian(df['High'], df['Low'], lower_length=self.period, upper_length=self.period)
 
-        # Define column names from pandas_ta
-        upper_col = f'DCU_{self.period}_{self.period}'
-        mid_col = f'DCM_{self.period}_{self.period}'
-        lower_col = f'DCL_{self.period}_{self.period}'
+        upper_col = next(c for c in dc_df.columns if c.startswith("DCU"))
+        mid_col   = next(c for c in dc_df.columns if c.startswith("DCM"))
+        lower_col = next(c for c in dc_df.columns if c.startswith("DCL"))
 
-        # Cache all components
-        if upper_col not in df.columns:
-            df[upper_col] = dc_df[upper_col]
-        if mid_col not in df.columns:
-            df[mid_col] = dc_df[mid_col]
-        if lower_col not in df.columns:
-            df[lower_col] = dc_df[lower_col]
+        if upper_col not in df.columns: df[upper_col] = dc_df[upper_col]
+        if mid_col   not in df.columns: df[mid_col]   = dc_df[mid_col]
+        if lower_col not in df.columns: df[lower_col] = dc_df[lower_col]
 
-        # Return the requested output
-        if self.output == 'upper':
-            return df[upper_col]
-        if self.output == 'mid':
-            return df[mid_col]
+        if self.output == 'upper': return df[upper_col]
+        if self.output == 'mid':   return df[mid_col]
         return df[lower_col]
 
 

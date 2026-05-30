@@ -9,7 +9,7 @@ import {
 } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import clsx from "clsx";
-import Dropdown from "@/components/dashboard/backtest/Dropdown";
+import Dropdown from "@/components/dashboard/toolbar/Dropdown";
 
 export type TimeframeSelectorHandle = {
   getData: () => string;

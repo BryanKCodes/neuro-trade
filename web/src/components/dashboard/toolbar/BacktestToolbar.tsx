@@ -4,19 +4,19 @@ import { useRef, useState, useEffect } from "react";
 import { FiPlay, FiLoader } from "react-icons/fi";
 import AssetSelector, {
   AssetSelectorHandle,
-} from "@/components/dashboard/backtest/AssetSelector";
+} from "@/components/dashboard/toolbar/AssetSelector";
 import DurationSelector, {
   DurationSelectorHandle,
-} from "@/components/dashboard/backtest/DurationSelector";
+} from "@/components/dashboard/toolbar/DurationSelector";
 import TimeframeSelector, {
   TimeframeSelectorHandle,
-} from "@/components/dashboard/backtest/TimeframeSelector";
+} from "@/components/dashboard/toolbar/TimeframeSelector";
 import CashSelector, {
   CashSelectorHandle,
-} from "@/components/dashboard/backtest/CashSelector";
+} from "@/components/dashboard/toolbar/CashSelector";
 import StrategySelector, {
   StrategySelectorHandle,
-} from "@/components/dashboard/backtest/StrategySelector";
+} from "@/components/dashboard/toolbar/StrategySelector";
 import IndicatorPicker from "@/components/dashboard/toolbar/IndicatorPicker";
 import type { IndicatorMeta } from "@/types/indicators";
 

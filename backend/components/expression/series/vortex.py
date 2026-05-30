@@ -26,15 +26,12 @@ class Vortex(Series):
     def calculator(self, df: pd.DataFrame) -> pd.Series:
         vortex_df = ta.vortex(df['High'], df['Low'], df['Close'], length=self.period)
 
-        # Define column names from pandas_ta
-        plus_vi_col = f'VTXP_{self.period}'
-        minus_vi_col = f'VTXM_{self.period}'
+        plus_vi_col  = next(c for c in vortex_df.columns if c.startswith("VTXP"))
+        minus_vi_col = next(c for c in vortex_df.columns if c.startswith("VTXM"))
 
-        # Cache all components
-        if plus_vi_col not in df.columns: df[plus_vi_col] = vortex_df[plus_vi_col]
+        if plus_vi_col  not in df.columns: df[plus_vi_col]  = vortex_df[plus_vi_col]
         if minus_vi_col not in df.columns: df[minus_vi_col] = vortex_df[minus_vi_col]
 
-        # Return the requested output
         if self.output == '+vi': return df[plus_vi_col]
         return df[minus_vi_col]
 

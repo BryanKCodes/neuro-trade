@@ -3,7 +3,7 @@
 import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { AiOutlineLineChart } from "react-icons/ai";
 import { Timestamp } from "firebase/firestore";
-import Dropdown from "@/components/dashboard/backtest/Dropdown";
+import Dropdown from "@/components/dashboard/toolbar/Dropdown";
 import { useUser } from "@/contexts/UserContext";
 import strategiesData from "@/data/strategies.json";
 

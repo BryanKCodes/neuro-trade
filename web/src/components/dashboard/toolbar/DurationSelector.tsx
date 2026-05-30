@@ -8,7 +8,7 @@ import {
 } from "react";
 import { FiClock } from "react-icons/fi";
 import clsx from "clsx";
-import Dropdown from "@/components/dashboard/backtest/Dropdown";
+import Dropdown from "@/components/dashboard/toolbar/Dropdown";
 
 export type DurationSelectorHandle = {
   /** Returns integer total days */

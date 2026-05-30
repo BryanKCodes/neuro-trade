@@ -30,24 +30,36 @@ class SeriesStyleResponse(BaseModel):
     line_style:  Literal["solid", "dashed"]
 
 
-class IndicatorMetaResponse(BaseModel):
-    indicator_id:  str
+class ParamDefResponse(BaseModel):
+    name:    str
+    label:   str
+    dtype:   Literal["int", "float"]
+    default: float
+    min_val: Optional[float]
+    max_val: Optional[float]
+
+
+class IndicatorTypeMetaResponse(BaseModel):
+    type_id:       str
     label:         str
+    description:   str
     category:      str
     pane:          Literal["main", "sub"]
     render_type:   Literal["line", "band", "histogram", "multi_line", "macd_composite"]
     series_styles: List[SeriesStyleResponse]
+    param_schema:  List[ParamDefResponse]
     y_min:         Optional[float]
     y_max:         Optional[float]
     ref_lines:     List[float]
 
 
 @app.get("/api/indicators/meta")
-def indicators_meta() -> List[IndicatorMetaResponse]:
+def indicators_meta() -> List[IndicatorTypeMetaResponse]:
     return [
-        IndicatorMetaResponse(
-            indicator_id  = defn.indicator_id,
+        IndicatorTypeMetaResponse(
+            type_id       = defn.type_id,
             label         = defn.label,
+            description   = defn.description,
             category      = defn.category,
             pane          = defn.pane,
             render_type   = defn.render_type,
@@ -62,6 +74,17 @@ def indicators_meta() -> List[IndicatorMetaResponse]:
                 )
                 for s in defn.series_styles
             ],
+            param_schema  = [
+                ParamDefResponse(
+                    name    = p.name,
+                    label   = p.label,
+                    dtype   = p.dtype,
+                    default = float(p.default),
+                    min_val = p.min_val,
+                    max_val = p.max_val,
+                )
+                for p in defn.param_schema
+            ],
             y_min      = defn.y_min,
             y_max      = defn.y_max,
             ref_lines  = defn.ref_lines,
@@ -74,10 +97,16 @@ def indicators_meta() -> List[IndicatorMetaResponse]:
 # OHLCV Preview Endpoint
 # ===================================================================
 
+class IndicatorInstanceRequest(BaseModel):
+    uuid:    str
+    type_id: str
+    params:  dict[str, float | int | str]
+
+
 class PreviewRequest(BaseModel):
     asset:      str
     timeframe:  str
-    indicators: List[str] = []
+    instances:  List[IndicatorInstanceRequest] = []
     # No duration — the chart always loads a large fixed window so the user
     # can pan back in time independently of the backtest window.
 
@@ -124,11 +153,12 @@ def preview(req: PreviewRequest):
     ]
 
     indicator_data: dict[str, list] = {}
-    for indicator_id in req.indicators:
-        defn = INDICATOR_REGISTRY.get(indicator_id)
-        if defn is None:
+    for inst in req.instances:
+        type_def = INDICATOR_REGISTRY.get(inst.type_id)
+        if type_def is None:
             continue
-        for (response_key, series_instance) in defn.factory():
+        for (key_suffix, series_instance) in type_def.factory(inst.params):
+            response_key = f"{inst.uuid}{key_suffix}"
             raw: pd.Series = series_instance.calculator(df)
             indicator_data[response_key] = [
                 None if pd.isna(v) else round(float(v), 6)
