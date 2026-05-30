@@ -7,7 +7,6 @@ import {
   useState,
   useEffect,
 } from "react";
-import { FiChevronDown } from "react-icons/fi";
 import clsx from "clsx";
 import Dropdown from "@/components/dashboard/toolbar/Dropdown";
 
@@ -63,7 +62,7 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle, TimeframeSelectorP
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [selected, setSelected] = useState("1d");
     const [customTab, setCustomTab] = useState("1d");
-    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false); // eslint-disable-line @typescript-eslint/no-unused-vars
 
     const handleTabClick = (tf: string) => {
       setSelected(tf);
@@ -137,4 +136,5 @@ const TimeframeSelector = forwardRef<TimeframeSelectorHandle, TimeframeSelectorP
   }
 );
 
+TimeframeSelector.displayName = "TimeframeSelector";
 export default TimeframeSelector;

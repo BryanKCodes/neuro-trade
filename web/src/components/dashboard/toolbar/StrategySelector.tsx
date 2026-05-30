@@ -10,12 +10,14 @@ import strategiesData from "@/data/strategies.json";
 export type StrategySelectorHandle = {
   getData: () => {
     strategy: string | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     benchmark: any | null;
   };
 };
 
 type Strategy = {
   name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   json: any;
   lastUsed: Timestamp | null;
 };
@@ -42,6 +44,7 @@ const StrategySelector = forwardRef<StrategySelectorHandle>((_, ref) => {
     if (!userData?.strategies) return;
 
     const strategies: Strategy[] = Object.entries(userData.strategies).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ([name, data]: [string, any]) => ({
         name,
         json: data.json,
@@ -63,6 +66,7 @@ const StrategySelector = forwardRef<StrategySelectorHandle>((_, ref) => {
   // Expose strategy + benchmark data to parent
   useImperativeHandle(ref, () => ({
     getData: () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let strategyJson: any | null = null;
 
       if (strategy === "Current") {

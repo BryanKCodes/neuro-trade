@@ -1,7 +1,7 @@
-import type { IChartApi, ISeriesApi, Time, TimeRange } from "lightweight-charts";
+import type { IChartApi, IRange, ISeriesApi, Time } from "lightweight-charts";
 
 type Entry = {
-  handler: (range: TimeRange | null) => void;
+  handler: (range: IRange<Time> | null) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   series:  ISeriesApi<any>;
 };
@@ -27,7 +27,7 @@ export class TimeSyncManager {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register(chart: IChartApi, primarySeries: ISeriesApi<any>): () => void {
-    const handler = (range: TimeRange | null) => {
+    const handler = (range: IRange<Time> | null) => {
       if (this.syncing || !range) return;
       this.syncing = true;
       for (const [peer] of this.entries) {

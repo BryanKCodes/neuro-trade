@@ -96,15 +96,16 @@ const BacktestToolbar = ({
       <Sep />
       <CashSelector ref={cashRef} />
       <Sep />
-      <IndicatorPicker
-        meta={indicatorMeta}
-        onSelect={onIndicatorSelected}
-      />
-      <Sep />
 
       <div className="flex min-w-0 flex-1 items-center">
         <StrategySelector ref={strategyRef} />
       </div>
+
+      <Sep />
+      <IndicatorPicker
+        meta={indicatorMeta}
+        onSelect={onIndicatorSelected}
+      />
 
       <button
         onClick={handleRun}

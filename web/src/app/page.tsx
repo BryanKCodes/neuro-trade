@@ -90,7 +90,7 @@ const HomePage = () => {
             </h1>
 
             <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-content-muted">
-              Describe a trading strategy in plain English. NeuroTrade's AI
+              Describe a trading strategy in plain English. NeuroTrade&apos;s AI
               translates it into a validated, backtestable algorithm — no
               programming required.
             </p>

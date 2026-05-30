@@ -44,12 +44,20 @@ export type IndicatorInstance = {
 // Nulls represent NaN warmup periods, filtered before being passed to lw-charts.
 export type IndicatorData = Record<string, (number | null)[]>;
 
+// OHLCV bar from the preview endpoint — aligned with lw-charts bar format.
+export type PreviewBar = {
+  time:    number;
+  open:    number;
+  high:    number;
+  low:     number;
+  close:   number;
+  volume?: number;
+};
+
 // Convenience lookup: type_id → IndicatorTypeMeta, fetched once on mount.
 export type IndicatorCatalogue = Record<string, IndicatorTypeMeta>;
 
 // ── V1 Legacy Type ────────────────────────────────────────────────────────────
-// Kept for Chart.tsx, BacktestResultsPanel.tsx, and IndicatorPicker.tsx
-// which have not been migrated yet. Remove after Batch 2 is complete.
 
 export type IndicatorMeta = {
   indicator_id:  string;
