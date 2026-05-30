@@ -17,19 +17,22 @@ import CashSelector, {
 import StrategySelector, {
   StrategySelectorHandle,
 } from "@/components/dashboard/backtest/StrategySelector";
+import IndicatorPicker from "@/components/dashboard/toolbar/IndicatorPicker";
+import type { IndicatorMeta } from "@/types/indicators";
 
 type BacktestToolbarProps = {
-  onResult: (data: unknown) => void;
-  // Duration is NOT passed — chart history is decoupled from backtest window.
-  onPreviewNeeded: (asset: string, timeframe: string) => void;
+  onResult:        (data: unknown) => void;
+  onPreviewNeeded: (asset: string, timeframe: string, indicators: string[]) => void;
+  indicatorMeta:   IndicatorMeta[];
 };
 
 const Sep = () => (
   <div className="mx-0.5 h-5 w-px shrink-0 self-center bg-border-subtle" />
 );
 
-const BacktestToolbar = ({ onResult, onPreviewNeeded }: BacktestToolbarProps) => {
-  const [isRunning, setIsRunning] = useState(false);
+const BacktestToolbar = ({ onResult, onPreviewNeeded, indicatorMeta }: BacktestToolbarProps) => {
+  const [isRunning,            setIsRunning]            = useState(false);
+  const [selectedIndicatorIds, setSelectedIndicatorIds] = useState<string[]>([]);
 
   const assetRef     = useRef<AssetSelectorHandle>(null);
   const durationRef  = useRef<DurationSelectorHandle>(null);
@@ -37,22 +40,26 @@ const BacktestToolbar = ({ onResult, onPreviewNeeded }: BacktestToolbarProps) =>
   const cashRef      = useRef<CashSelectorHandle>(null);
   const strategyRef  = useRef<StrategySelectorHandle>(null);
 
+  const getAsset     = () => assetRef.current?.getData()     ?? "AAPL";
+  const getTimeframe = () => timeframeRef.current?.getData() ?? "1d";
+
   // Fire an initial preview on mount so the chart is immediately populated.
   useEffect(() => {
-    const asset     = assetRef.current?.getData()    ?? "AAPL";
-    const timeframe = timeframeRef.current?.getData() ?? "1d";
-    onPreviewNeeded(asset, timeframe);
+    onPreviewNeeded(getAsset(), getTimeframe(), selectedIndicatorIds);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAssetChange = (asset: string) => {
-    const timeframe = timeframeRef.current?.getData() ?? "1d";
-    onPreviewNeeded(asset, timeframe);
+    onPreviewNeeded(asset, getTimeframe(), selectedIndicatorIds);
   };
 
   const handleTimeframeChange = (timeframe: string) => {
-    const asset = assetRef.current?.getData() ?? "AAPL";
-    onPreviewNeeded(asset, timeframe);
+    onPreviewNeeded(getAsset(), timeframe, selectedIndicatorIds);
+  };
+
+  const handleIndicatorsChange = (ids: string[]) => {
+    setSelectedIndicatorIds(ids);
+    onPreviewNeeded(getAsset(), getTimeframe(), ids);
   };
 
   // Duration changes only affect the backtest — no preview re-fetch needed.
@@ -60,8 +67,8 @@ const BacktestToolbar = ({ onResult, onPreviewNeeded }: BacktestToolbarProps) =>
   async function handleRun() {
     if (isRunning) return;
 
-    const asset     = assetRef.current?.getData();
-    const timeframe = timeframeRef.current?.getData();
+    const asset     = getAsset();
+    const timeframe = getTimeframe();
     const duration  = durationRef.current?.getData();
     const cash      = cashRef.current?.getData();
     const { strategy, benchmark } = strategyRef.current?.getData() ?? {};
@@ -91,6 +98,12 @@ const BacktestToolbar = ({ onResult, onPreviewNeeded }: BacktestToolbarProps) =>
       <TimeframeSelector ref={timeframeRef} onChange={handleTimeframeChange} />
       <Sep />
       <CashSelector ref={cashRef} />
+      <Sep />
+      <IndicatorPicker
+        meta={indicatorMeta}
+        selectedIds={selectedIndicatorIds}
+        onChange={handleIndicatorsChange}
+      />
       <Sep />
 
       <div className="flex min-w-0 flex-1 items-center">

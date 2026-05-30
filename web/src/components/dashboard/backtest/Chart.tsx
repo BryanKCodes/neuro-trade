@@ -13,11 +13,13 @@ import {
   type IChartApi,
   type ISeriesApi,
   type ISeriesMarkersPluginApi,
+  type LogicalRange,
   type SeriesMarker,
   type Time,
   type UTCTimestamp,
 } from "lightweight-charts";
 import { FiBarChart2 } from "react-icons/fi";
+import type { IndicatorData, IndicatorMeta } from "@/types/indicators";
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -30,10 +32,17 @@ export type PreviewBar = {
   volume?: number;
 };
 
+// Backtest response is a large, loosely-typed server payload.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type BacktestPayload = any;
+
 export type ChartHandle = {
-  setData:        (data: any) => void;
-  setPreviewData: (bars: PreviewBar[]) => void;
+  setData:        (data: BacktestPayload) => void;
+  setPreviewData: (bars: PreviewBar[], meta: IndicatorMeta[], indicatorData: IndicatorData) => void;
 };
+
+// Union of the two series types the indicator factory can produce.
+type IndicatorSeries = ISeriesApi<"Line"> | ISeriesApi<"Histogram">;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,6 +74,153 @@ function fmtVol(v: number): string {
   return String(v);
 }
 
+// Converts a parallel data array into lw-charts time+value points, dropping
+// null warmup entries so the chart never receives a sparse/broken series.
+function toLinePoints(
+  bars: PreviewBar[],
+  data: (number | null)[] | undefined,
+): { time: UTCTimestamp; value: number }[] {
+  if (!data) return [];
+  return bars.flatMap((b, i) => {
+    const v = data[i];
+    return v !== null && v !== undefined
+      ? [{ time: b.time as UTCTimestamp, value: v }]
+      : [];
+  });
+}
+
+// ─── Indicator rendering factories ───────────────────────────────────────────
+
+// Dispatches on render_type — never on indicator_id.
+// Any new registry entry with render_type "line" or "band" renders for free.
+function addIndicatorToMainPane(
+  chart: IChartApi,
+  meta:  IndicatorMeta,
+  bars:  PreviewBar[],
+  data:  IndicatorData,
+): IndicatorSeries[] {
+  const baseOptions = {
+    priceScaleId:          "right",  // overlay on the price axis
+    priceLineVisible:      false,
+    lastValueVisible:      false,
+    crosshairMarkerVisible: false,
+  } as const;
+
+  switch (meta.render_type) {
+    case "line": {
+      const style = meta.series_styles[0];
+      const s = chart.addSeries(LineSeries, {
+        ...baseOptions,
+        color:     style.color,
+        lineWidth: style.line_width as 1 | 2 | 3 | 4,
+        lineStyle: style.line_style === "dashed" ? LineStyle.Dashed : LineStyle.Solid,
+      });
+      s.setData(toLinePoints(bars, data[meta.indicator_id]));
+      return [s];
+    }
+
+    case "band": {
+      // Handles BOLL (3 lines), DC (3 lines), KC (3 lines), Ichimoku (5 lines).
+      return meta.series_styles.map((style) => {
+        const s = chart.addSeries(LineSeries, {
+          ...baseOptions,
+          color:     style.color,
+          lineWidth: style.line_width as 1 | 2 | 3 | 4,
+          lineStyle: style.line_style === "dashed" ? LineStyle.Dashed : LineStyle.Solid,
+        });
+        s.setData(toLinePoints(bars, data[meta.indicator_id + style.key_suffix]));
+        return s;
+      });
+    }
+
+    default:
+      return [];
+  }
+}
+
+function addIndicatorToSubPane(
+  subChart: IChartApi,
+  meta:     IndicatorMeta,
+  bars:     PreviewBar[],
+  data:     IndicatorData,
+): IndicatorSeries[] {
+  const baseOptions = {
+    priceLineVisible:      false,
+    lastValueVisible:      false,
+    crosshairMarkerVisible: false,
+  } as const;
+
+  switch (meta.render_type) {
+    case "line": {
+      const style = meta.series_styles[0];
+      const s = subChart.addSeries(LineSeries, {
+        ...baseOptions,
+        color:     style.color,
+        lineWidth: style.line_width as 1 | 2 | 3 | 4,
+      });
+      s.setData(toLinePoints(bars, data[meta.indicator_id]));
+      // Reference lines (RSI 30/70, CCI ±100, MFI 20/80, WillR -80/-20)
+      for (const level of meta.ref_lines) {
+        s.createPriceLine({
+          price:            level,
+          color:            style.color + "80", // 50% opacity
+          lineWidth:        1,
+          lineStyle:        LineStyle.Dashed,
+          axisLabelVisible: false,
+          title:            String(level),
+        });
+      }
+      return [s];
+    }
+
+    case "histogram": {
+      // Standalone histogram (AO).
+      const style = meta.series_styles[0];
+      const s = subChart.addSeries(HistogramSeries, {
+        ...baseOptions,
+        color: style.color,
+      });
+      s.setData(toLinePoints(bars, data[meta.indicator_id]));
+      return [s];
+    }
+
+    case "multi_line": {
+      // N lines sharing the sub-pane (ADX + DI lines, Vortex +VI/-VI).
+      return meta.series_styles.map((style) => {
+        const s = subChart.addSeries(LineSeries, {
+          ...baseOptions,
+          color:     style.color,
+          lineWidth: style.line_width as 1 | 2 | 3 | 4,
+        });
+        s.setData(toLinePoints(bars, data[meta.indicator_id + style.key_suffix]));
+        return s;
+      });
+    }
+
+    case "macd_composite": {
+      // 2 lines (MACD line + signal) + 1 histogram.
+      return meta.series_styles.map((style) => {
+        const responseKey = meta.indicator_id + style.key_suffix;
+        if (style.series_type === "histogram") {
+          const s = subChart.addSeries(HistogramSeries, { ...baseOptions, color: style.color });
+          s.setData(toLinePoints(bars, data[responseKey]));
+          return s;
+        }
+        const s = subChart.addSeries(LineSeries, {
+          ...baseOptions,
+          color:     style.color,
+          lineWidth: style.line_width as 1 | 2 | 3 | 4,
+        });
+        s.setData(toLinePoints(bars, data[responseKey]));
+        return s;
+      });
+    }
+
+    default:
+      return [];
+  }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type LegendData = {
@@ -89,24 +245,31 @@ type Visibility = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const Chart = forwardRef<ChartHandle>((_, ref) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef     = useRef<IChartApi | null>(null);
-  const candleRef    = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const volumeRef    = useRef<ISeriesApi<"Histogram"> | null>(null);
-  const stratRef     = useRef<ISeriesApi<"Line"> | null>(null);
-  const benchRef     = useRef<ISeriesApi<"Line"> | null>(null);
-  const markersRef   = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
+  const containerRef    = useRef<HTMLDivElement>(null);
+  const subContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef        = useRef<IChartApi | null>(null);
+  const subChartRef     = useRef<IChartApi | null>(null);
+  const candleRef       = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const volumeRef       = useRef<ISeriesApi<"Histogram"> | null>(null);
+  const stratRef        = useRef<ISeriesApi<"Line"> | null>(null);
+  const benchRef        = useRef<ISeriesApi<"Line"> | null>(null);
+  const markersRef      = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
 
-  const hasPreviewRef  = useRef(false);
-  const lastLegendRef  = useRef<LegendData | null>(null);
+  // Active indicator series — keyed by indicator_id for targeted cleanup.
+  const activeMainSeriesRef = useRef<Map<string, IndicatorSeries[]>>(new Map());
+  const activeSubSeriesRef  = useRef<Map<string, IndicatorSeries[]>>(new Map());
+
+  const hasPreviewRef = useRef(false);
+  const lastLegendRef = useRef<LegendData | null>(null);
   // Full candle history for the autoscaleInfoProvider ratio-lock calculation.
-  const allCandlesRef  = useRef<PreviewBar[]>([]);
+  const allCandlesRef = useRef<PreviewBar[]>([]);
   // initial_equity / initial_price — set when a backtest result loads.
-  const ratioRef       = useRef<number | null>(null);
+  const ratioRef      = useRef<number | null>(null);
 
-  const [hasData,    setHasData]    = useState(false);
-  const [legend,     setLegend]     = useState<LegendData | null>(null);
-  const [visibility, setVisibility] = useState<Visibility>({
+  const [hasData,       setHasData]       = useState(false);
+  const [legend,        setLegend]        = useState<LegendData | null>(null);
+  const [subPaneVisible, setSubPaneVisible] = useState(false);
+  const [visibility,    setVisibility]    = useState<Visibility>({
     price: true, strategy: true, benchmark: true,
   });
 
@@ -140,9 +303,11 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
 
   // ── Chart initialisation ────────────────────────────────────────────────────
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const container    = containerRef.current;
+    const subContainer = subContainerRef.current;
+    if (!container || !subContainer) return;
 
+    // ── Main chart ────────────────────────────────────────────────────────────
     const chart = createChart(container, {
       width:  container.offsetWidth,
       height: container.offsetHeight,
@@ -167,18 +332,14 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
           labelBackgroundColor: CROSSHAIR_COLOR,
         },
       },
-      // Fix 4: autoScale ensures the equity axis rescales as the user pans/zooms.
-      // scaleMargins gives the equity lines 80% of the pane height (10% breathing
-      // room top and bottom), preventing them from hugging the axis extremes.
       leftPriceScale: {
         visible:      true,
         borderColor:  GRID_COLOR,
         autoScale:    true,
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
-      // scaleMargins must MATCH the leftPriceScale margins exactly.
-      // With identical margins on both axes the padding is applied proportionally,
-      // so left_range / right_range = ratio everywhere after margins are applied.
+      // scaleMargins must MATCH the leftPriceScale margins exactly so the
+      // ratio-lock autoscaleInfoProvider keeps left/right axes proportional.
       rightPriceScale: {
         visible:      true,
         borderColor:  GRID_COLOR,
@@ -217,11 +378,8 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
       visible:      false,
     });
 
-    // autoscaleInfoProvider is called every render frame by lightweight-charts to
-    // determine the left axis range. We compute it from the visible price candles
-    // multiplied by the ratio (initial_equity / initial_price), forcing the left
-    // axis to mirror the right axis at all times — even when panning outside the
-    // backtest window where the equity series has no data.
+    // autoscaleInfoProvider forces the left (equity) axis to mirror the right
+    // (price) axis at all zoom/pan levels — the ratio is set on each backtest run.
     const equityScaleProvider = () => {
       if (!ratioRef.current || allCandlesRef.current.length === 0) return null;
       const logicalRange = chart.timeScale().getVisibleLogicalRange();
@@ -232,15 +390,12 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
       if (from > to) return null;
 
       let minP = Infinity, maxP = -Infinity;
-      const slice = allCandlesRef.current.slice(from, to + 1);
-      for (const b of slice) {
+      for (const b of allCandlesRef.current.slice(from, to + 1)) {
         if (b.low  < minP) minP = b.low;
         if (b.high > maxP) maxP = b.high;
       }
       if (!isFinite(minP)) return null;
 
-      // Return the raw proportional range — scaleMargins on the left axis
-      // then adds the same 10% padding as the right axis, keeping them in sync.
       return {
         priceRange: {
           minValue: minP * ratioRef.current,
@@ -276,14 +431,66 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
       autoscaleInfoProvider:          equityScaleProvider,
     });
 
-    chartRef.current   = chart;
-    candleRef.current  = candleSeries;
-    volumeRef.current  = volumeSeries;
-    stratRef.current   = strategySeries;
-    benchRef.current   = benchmarkSeries;
-    markersRef.current = createSeriesMarkers(candleSeries);
+    // ── Sub-pane chart ────────────────────────────────────────────────────────
+    const subChart = createChart(subContainer, {
+      width:  subContainer.offsetWidth || 1,
+      height: subContainer.offsetHeight || 1,
+      layout: {
+        background: { type: ColorType.Solid, color: BG_COLOR },
+        textColor:  TEXT_COLOR,
+        fontFamily: "var(--font-jetbrains-mono), 'Courier New', monospace",
+        fontSize:   11,
+      },
+      grid: {
+        vertLines: { color: GRID_COLOR },
+        horzLines: { color: GRID_COLOR },
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: {
+          color: CROSSHAIR_COLOR, width: 1, style: LineStyle.Dashed,
+          labelBackgroundColor: CROSSHAIR_COLOR,
+        },
+        horzLine: {
+          color: CROSSHAIR_COLOR, width: 1, style: LineStyle.Dashed,
+          labelBackgroundColor: CROSSHAIR_COLOR,
+        },
+      },
+      leftPriceScale:  { visible: false },
+      rightPriceScale: { visible: true, borderColor: GRID_COLOR, autoScale: true },
+      // Time axis hidden — the main chart's axis serves both panes.
+      timeScale: { visible: false, borderColor: GRID_COLOR },
+      handleScale:  true,
+      handleScroll: true,
+    });
 
-    // ── Crosshair subscription ──────────────────────────────────────────────
+    // ── Bidirectional time-scale sync ─────────────────────────────────────────
+    // The flag prevents infinite ping-pong between the two subscriptions.
+    let isSyncing = false;
+    const onMainRangeChange = (range: LogicalRange | null) => {
+      if (isSyncing || !range) return;
+      isSyncing = true;
+      subChart.timeScale().setVisibleLogicalRange(range);
+      isSyncing = false;
+    };
+    const onSubRangeChange = (range: LogicalRange | null) => {
+      if (isSyncing || !range) return;
+      isSyncing = true;
+      chart.timeScale().setVisibleLogicalRange(range);
+      isSyncing = false;
+    };
+    chart.timeScale().subscribeVisibleLogicalRangeChange(onMainRangeChange);
+    subChart.timeScale().subscribeVisibleLogicalRangeChange(onSubRangeChange);
+
+    chartRef.current    = chart;
+    subChartRef.current = subChart;
+    candleRef.current   = candleSeries;
+    volumeRef.current   = volumeSeries;
+    stratRef.current    = strategySeries;
+    benchRef.current    = benchmarkSeries;
+    markersRef.current  = createSeriesMarkers(candleSeries);
+
+    // ── Crosshair subscription ────────────────────────────────────────────────
     chart.subscribeCrosshairMove((param) => {
       if (!param.point || !param.time) {
         setLegend(lastLegendRef.current);
@@ -313,20 +520,70 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
       });
     });
 
+    // ── ResizeObservers ───────────────────────────────────────────────────────
     const ro = new ResizeObserver((entries) => {
       const { width, height } = entries[0].contentRect;
       if (width > 0 && height > 0) chart.applyOptions({ width, height });
     });
     ro.observe(container);
 
-    return () => { ro.disconnect(); chart.remove(); };
+    const subRo = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) subChart.applyOptions({ width, height });
+    });
+    subRo.observe(subContainer);
+
+    return () => {
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(onMainRangeChange);
+      subChart.timeScale().unsubscribeVisibleLogicalRangeChange(onSubRangeChange);
+      ro.disconnect();
+      subRo.disconnect();
+      chart.remove();
+      subChart.remove();
+    };
   }, []);
+
+  // ── Indicator helpers ───────────────────────────────────────────────────────
+
+  // Removes all active indicator series from both charts and clears the maps.
+  const clearIndicators = () => {
+    activeMainSeriesRef.current.forEach((list) =>
+      list.forEach((s) => chartRef.current?.removeSeries(s))
+    );
+    activeMainSeriesRef.current.clear();
+
+    activeSubSeriesRef.current.forEach((list) =>
+      list.forEach((s) => subChartRef.current?.removeSeries(s))
+    );
+    activeSubSeriesRef.current.clear();
+  };
+
+  // Renders all indicators described by meta against the given bar/data arrays.
+  const applyIndicators = (
+    meta:          IndicatorMeta[],
+    bars:          PreviewBar[],
+    indicatorData: IndicatorData,
+  ) => {
+    clearIndicators();
+
+    for (const m of meta) {
+      if (m.pane === "main" && chartRef.current) {
+        const added = addIndicatorToMainPane(chartRef.current, m, bars, indicatorData);
+        if (added.length > 0) activeMainSeriesRef.current.set(m.indicator_id, added);
+      } else if (m.pane === "sub" && subChartRef.current) {
+        const added = addIndicatorToSubPane(subChartRef.current, m, bars, indicatorData);
+        if (added.length > 0) activeSubSeriesRef.current.set(m.indicator_id, added);
+      }
+    }
+
+    setSubPaneVisible(activeSubSeriesRef.current.size > 0);
+  };
 
   // ── Imperative handle ───────────────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
 
     // Full backtest result — overlay strategy/benchmark/markers; keep existing candles.
-    setData: (data: any) => {
+    setData: (data: BacktestPayload) => {
       if (!stratRef.current || !benchRef.current || !candleRef.current || !volumeRef.current) return;
 
       markersRef.current?.setMarkers([]);
@@ -334,8 +591,6 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
       const candles: PreviewBar[] = data.price_data ?? [];
 
       // Compute ratio for the autoscaleInfoProvider.
-      // initial_equity = first element of the equity curve = starting cash.
-      // initial_price  = close of the first backtest bar.
       const initialEquity = (data.equity_curve?.simple ?? [])[0] ?? 0;
       const initialPrice  = candles[0]?.close ?? 1;
       if (initialEquity > 0 && initialPrice > 0) {
@@ -386,8 +641,7 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
         markersRef.current.setMarkers(markers);
       }
 
-      // Fix 3: Zoom to the backtest window with 3-bar padding on each side.
-      // Padding is timeframe-agnostic: 3 × average bar duration in seconds.
+      // Zoom to the backtest window with 3-bar padding on each side.
       if (timestamps.length >= 2) {
         const avgBarDuration = Math.round(
           (timestamps[timestamps.length - 1] - timestamps[0]) / (timestamps.length - 1)
@@ -412,11 +666,11 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
       }
     },
 
-    // Live preview — full-history candles + volume; clears any strategy overlay.
-    setPreviewData: (bars: PreviewBar[]) => {
+    // Live preview — full-history candles + volume + indicators; clears any strategy overlay.
+    setPreviewData: (bars: PreviewBar[], meta: IndicatorMeta[], indicatorData: IndicatorData) => {
       if (!candleRef.current || !stratRef.current || !benchRef.current || !volumeRef.current) return;
 
-      // Store the full candle history so the autoscaleInfoProvider can look up
+      // Store the full candle history so the autoscaleInfoProvider can compute
       // the visible price range even when the equity series has no data there.
       allCandlesRef.current = bars;
       // Reset ratio until a new backtest is run against this ticker/timeframe.
@@ -439,6 +693,9 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
           color: (b.close >= b.open) ? VOL_UP : VOL_DOWN,
         }))
       );
+
+      // Remove all old indicator series and draw the new selection.
+      applyIndicators(meta, bars, indicatorData);
 
       if (bars.length > 0) {
         const last = bars[bars.length - 1];
@@ -494,7 +751,7 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
         })}
       </div>
 
-      {/* ── Chart canvas + overlays ───────────────────────────────────────── */}
+      {/* ── Main chart canvas + legend overlay ───────────────────────────── */}
       <div className="relative min-h-0 flex-1">
         <div ref={containerRef} className="h-full w-full" />
 
@@ -509,7 +766,7 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
           </div>
         )}
 
-        {/* ── Fixed legend — offset right of the left axis (Fix 1) ─────── */}
+        {/* ── Fixed legend — offset right of the left axis ──────────────── */}
         {hasData && legend && (
           <div className="pointer-events-none absolute left-20 top-2.5 z-10 flex flex-col gap-1 font-mono">
             {/* OHLCV row */}
@@ -526,7 +783,6 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
               <span className="text-zinc-500">
                 C&nbsp;<span className={`tabular-nums ${numClass}`}>{legend.close}</span>
               </span>
-              {/* Vol shares visibility with price (Fix 2) */}
               {visibility.price && (
                 <span className="text-zinc-500">
                   Vol&nbsp;<span className="tabular-nums text-zinc-400">{legend.volume}</span>
@@ -556,6 +812,14 @@ const Chart = forwardRef<ChartHandle>((_, ref) => {
           </div>
         )}
       </div>
+
+      {/* ── Sub-pane — slides in when oscillators are active ─────────────── */}
+      <div
+        ref={subContainerRef}
+        className={`shrink-0 overflow-hidden border-t border-zinc-800 transition-all duration-200 ${
+          subPaneVisible ? "h-[140px]" : "h-0 border-t-0"
+        }`}
+      />
     </div>
   );
 });

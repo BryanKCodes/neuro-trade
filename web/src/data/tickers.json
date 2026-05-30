@@ -41,8 +41,20 @@
       "name": "Abony Acquisition Corp. I - Warrants"
     },
     {
+      "symbol": "AACP",
+      "name": "Apogee Acquisition Corp - Class A Ordinary Shares"
+    },
+    {
+      "symbol": "AACPR",
+      "name": "Apogee Acquisition Corp - Rights"
+    },
+    {
       "symbol": "AACPU",
       "name": "Apogee Acquisition Corp - Units"
+    },
+    {
+      "symbol": "AACPW",
+      "name": "Apogee Acquisition Corp - Warrant"
     },
     {
       "symbol": "AADR",
@@ -225,8 +237,16 @@
       "name": "Acorn Energy, Inc. - Common Stock"
     },
     {
+      "symbol": "ACGC",
+      "name": "ACP Holdings Acquisition Corp. - Class A Ordinary Shares"
+    },
+    {
       "symbol": "ACGCU",
       "name": "ACP Holdings Acquisition Corp. - Units"
+    },
+    {
+      "symbol": "ACGCW",
+      "name": "ACP Holdings Acquisition Corp. - Warrants"
     },
     {
       "symbol": "ACGL",
@@ -1157,10 +1177,6 @@
       "name": "Direxion Daily AMD Bull 2X ETF"
     },
     {
-      "symbol": "AMWD",
-      "name": "American Woodmark Corporation - Common Stock"
-    },
-    {
       "symbol": "AMYY",
       "name": "GraniteShares YieldBOOST AMD ETF"
     },
@@ -1453,8 +1469,20 @@
       "name": "Archimedes Tech SPAC Partners III Co. - Warrant"
     },
     {
+      "symbol": "ARCL",
+      "name": "ARC Group Acquisition I Corp - Class A Ordinary Shares"
+    },
+    {
+      "symbol": "ARCLR",
+      "name": "ARC Group Acquisition I Corp - Right"
+    },
+    {
       "symbol": "ARCLU",
       "name": "ARC Group Acquisition I Corp - Unit"
+    },
+    {
+      "symbol": "ARCLW",
+      "name": "ARC Group Acquisition I Corp - Warrants"
     },
     {
       "symbol": "ARCT",
@@ -1579,6 +1607,10 @@
     {
       "symbol": "ASCI",
       "name": "abrdn International Small Cap Active ETF"
+    },
+    {
+      "symbol": "ASEC",
+      "name": "American Century Securitized Credit ETF"
     },
     {
       "symbol": "ASLE",
@@ -2519,6 +2551,10 @@
     {
       "symbol": "BIDU",
       "name": "Baidu, Inc. - American Depositary Shares, each representing 8 ordinary share"
+    },
+    {
+      "symbol": "BIDWU",
+      "name": "Tribeca Strategic Acquisition Corp. - Unit"
     },
     {
       "symbol": "BIIB",
@@ -5027,10 +5063,6 @@
     {
       "symbol": "CVGI",
       "name": "Commercial Vehicle Group, Inc. - Common Stock"
-    },
-    {
-      "symbol": "CVGW",
-      "name": "Calavo Growers, Inc. - Common Stock"
     },
     {
       "symbol": "CVKD",
@@ -10245,6 +10277,10 @@
       "name": "iShares Core 1-5 Year USD Bond ETF"
     },
     {
+      "symbol": "ISTM",
+      "name": "iShares Strategic Metals ETF"
+    },
+    {
       "symbol": "ISTR",
       "name": "Investar Holding Corporation - Common Stock"
     },
@@ -10503,6 +10539,10 @@
     {
       "symbol": "JPEF",
       "name": "JPMorgan Equity Focus ETF"
+    },
+    {
+      "symbol": "JPFP",
+      "name": "JPMorgan Managed Futures Plus ETF"
     },
     {
       "symbol": "JPY",
@@ -15685,6 +15725,10 @@
       "name": "Portillo's Inc. - Class A Common Stock"
     },
     {
+      "symbol": "PTN",
+      "name": "Palatin Technologies, Inc. - Common Stock"
+    },
+    {
       "symbol": "PTNM",
       "name": "Pitanium Limited - Class A Ordinary Shares"
     },
@@ -19253,10 +19297,6 @@
       "name": "T. Rowe Price Health Care ETF"
     },
     {
-      "symbol": "TMET",
-      "name": "iShares Transition-Enabling Metals ETF"
-    },
-    {
       "symbol": "TMNL",
       "name": "T. Rowe Price Long Municipal Income ETF"
     },
@@ -20295,6 +20335,10 @@
     {
       "symbol": "VBIO",
       "name": "Valion Bio, Inc. - Common stock"
+    },
+    {
+      "symbol": "VBNB",
+      "name": "VanEck BNB ETF"
     },
     {
       "symbol": "VBNK",
@@ -21873,7 +21917,7 @@
       "name": "Zymeworks Inc. - Common Stock"
     },
     {
-      "symbol": "File Creation Time: 0528202603:03",
+      "symbol": "File Creation Time: 0529202612:10",
       "name": ""
     },
     {
@@ -31721,6 +31765,10 @@
       "name": "Formidable ETF"
     },
     {
+      "symbol": "FOTO",
+      "name": "Tuttle Capital Pure Play Photonics ETF"
+    },
+    {
       "symbol": "FOUR",
       "name": "Shift4 Payments, Inc. Class A Common Stock"
     },
@@ -40321,6 +40369,10 @@
       "name": "Quanex Building Products Corporation Common Stock"
     },
     {
+      "symbol": "NXB",
+      "name": "NextBoat Inc. Common Stcok"
+    },
+    {
       "symbol": "NXDR",
       "name": "Nextdoor Holdings, Inc. Class A Common Stock"
     },
@@ -40867,10 +40919,6 @@
     {
       "symbol": "OTF",
       "name": "Blue Owl Technology Finance Corp. Common Stock"
-    },
-    {
-      "symbol": "OTH",
-      "name": "Off The Hook YS Inc. Common Stock"
     },
     {
       "symbol": "OTIS",
@@ -42465,10 +42513,6 @@
       "name": "Pacer Trendpilot US Mid Cap ETF"
     },
     {
-      "symbol": "PTN",
-      "name": "Palatin Technologies, Inc. Common Stock"
-    },
-    {
       "symbol": "PTNT",
       "name": "Corgi IP Licensing & Royalties ETF"
     },
@@ -43983,6 +44027,10 @@
     {
       "symbol": "RWTQ",
       "name": "Redwood Trust, Inc. 9.500% Senior Notes Due 2030"
+    },
+    {
+      "symbol": "RWTS",
+      "name": "Redwood Trust, Inc. 9.75% Senior Notes Due 2031"
     },
     {
       "symbol": "RWX",
@@ -46727,6 +46775,10 @@
     {
       "symbol": "TETH",
       "name": "21Shares Ethereum ETF"
+    },
+    {
+      "symbol": "TEUP",
+      "name": "T-REX 2X Long TE Daily Target ETF"
     },
     {
       "symbol": "TEVA",
@@ -50781,5 +50833,5 @@
       "name": "IEX Test Company Test Symbol Three for IEX"
     }
   ],
-  "updated": 1779959376640
+  "updated": 1780075179229
 }

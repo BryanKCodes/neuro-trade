@@ -34,7 +34,7 @@ class ATR(Series):
 
         # If the series is a OHLC type (like Price()), we fallback to classical ATR
         # which uses H, L, C.
-        if isinstance(self.series, Price):
+        if isinstance(self.input_series, Price):
             return ta.atr(df['High'], df['Low'], df['Close'], length=self.period)
 
         # Otherwise compute ATR as simple SMA of absolute differences,

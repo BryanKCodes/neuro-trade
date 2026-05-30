@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import Header from "@/components/dashboard/Header";
 import BacktestToolbar from "@/components/dashboard/toolbar/BacktestToolbar";
@@ -8,26 +8,48 @@ import BacktestResultsPanel, {
   BacktestResultsHandle,
 } from "@/components/dashboard/backtest/BacktestResultsPanel";
 import ChatWidget from "@/components/dashboard/chat/ChatWidget";
+import type { IndicatorMeta } from "@/types/indicators";
 
 const DashboardPage = () => {
   const resultsRef      = useRef<BacktestResultsHandle>(null);
   const previewAbortRef = useRef<AbortController | null>(null);
 
-  const handlePreviewNeeded = async (asset: string, timeframe: string) => {
+  const [indicatorMeta, setIndicatorMeta] = useState<IndicatorMeta[]>([]);
+
+  // Load the indicator catalogue once on mount — it's static and cached by Next.js.
+  useEffect(() => {
+    fetch("/api/indicators")
+      .then((r) => r.json())
+      .then(setIndicatorMeta)
+      .catch((err) => console.error("Failed to load indicator metadata:", err));
+  }, []);
+
+  const handlePreviewNeeded = async (
+    asset:      string,
+    timeframe:  string,
+    indicators: string[],
+  ) => {
     previewAbortRef.current?.abort();
     const controller = new AbortController();
     previewAbortRef.current = controller;
 
     try {
       const res = await fetch("/api/preview", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ asset, timeframe }),
-        signal: controller.signal,
+        body:    JSON.stringify({ asset, timeframe, indicators }),
+        signal:  controller.signal,
       });
       if (!res.ok) return;
       const data = await res.json();
-      resultsRef.current?.setPreviewData(data.bars);
+
+      // Filter the full catalogue down to only the selected indicators so Chart
+      // knows the render_type and series_styles for each one.
+      const selectedMeta = indicatorMeta.filter((m) =>
+        indicators.includes(m.indicator_id)
+      );
+
+      resultsRef.current?.setPreviewData(data.bars, selectedMeta, data.indicators ?? {});
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
       console.error("Preview fetch failed:", err);
@@ -40,6 +62,7 @@ const DashboardPage = () => {
       <BacktestToolbar
         onResult={(data) => resultsRef.current?.setData(data)}
         onPreviewNeeded={handlePreviewNeeded}
+        indicatorMeta={indicatorMeta}
       />
 
       <PanelGroup direction="horizontal" className="min-h-0 flex-1">

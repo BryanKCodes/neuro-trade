@@ -4,25 +4,30 @@ import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import Chart, { ChartHandle, PreviewBar } from "@/components/dashboard/backtest/Chart";
 import MetricsStrip from "@/components/dashboard/backtest/MetricsStrip";
 import MetricsDrawer from "@/components/dashboard/backtest/MetricsDrawer";
+import type { IndicatorData, IndicatorMeta } from "@/types/indicators";
+
+// Backtest response is a large, loosely-typed server payload.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type BacktestPayload = any;
 
 export type BacktestResultsHandle = {
-  setData:        (data: any) => void;
-  setPreviewData: (bars: PreviewBar[]) => void;
+  setData:        (data: BacktestPayload) => void;
+  setPreviewData: (bars: PreviewBar[], meta: IndicatorMeta[], indicatorData: IndicatorData) => void;
 };
 
 const BacktestResultsPanel = forwardRef<BacktestResultsHandle>((_, ref) => {
   const chartRef = useRef<ChartHandle>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [metricsData, setMetricsData] = useState<any>(null);
   const [drawerOpen, setDrawerOpen]   = useState(false);
 
   useImperativeHandle(ref, () => ({
-    setData: (data: any) => {
+    setData: (data: BacktestPayload) => {
       chartRef.current?.setData(data);
       setMetricsData(data.metrics);
     },
-    setPreviewData: (bars: PreviewBar[]) => {
-      chartRef.current?.setPreviewData(bars);
-      // Clear stale metrics when the asset/timeframe changes.
+    setPreviewData: (bars: PreviewBar[], meta: IndicatorMeta[], indicatorData: IndicatorData) => {
+      chartRef.current?.setPreviewData(bars, meta, indicatorData);
       setMetricsData(null);
     },
   }));
@@ -31,7 +36,7 @@ const BacktestResultsPanel = forwardRef<BacktestResultsHandle>((_, ref) => {
     // relative + overflow-hidden establishes the positioning context for the
     // MetricsDrawer slide-up overlay and clips it to the panel boundary.
     <div className="relative flex h-full w-full flex-col overflow-hidden">
-      {/* Chart — fills all available vertical space */}
+      {/* Chart + sub-pane — fills all available vertical space */}
       <div className="min-h-0 flex-1 p-2 pb-1">
         <Chart ref={chartRef} />
       </div>
