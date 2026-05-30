@@ -21,7 +21,8 @@ function formatParams(params: Record<string, number>, schema: ParamDef[]): strin
 }
 
 const ChartLegendItem = ({ instance, typeDef, currentValue, onSettings, onRemove }: Props) => {
-  const dotColor = typeDef.series_styles[0]?.color ?? "#71717A";
+  const primarySuffix = typeDef.series_styles[0]?.key_suffix ?? "";
+  const dotColor = instance.colors?.[primarySuffix] ?? typeDef.series_styles[0]?.color ?? "#71717A";
   const label    = typeDef.label + formatParams(instance.params, typeDef.param_schema);
 
   return (

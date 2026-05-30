@@ -138,9 +138,15 @@ const DashboardPage = () => {
     fetchPreview(currentAsset, currentTimeframe, next, false);
   };
 
-  const handleUpdateInstance = (uuid: string, newParams: Record<string, number>) => {
+  const handleUpdateInstance = (
+    uuid:       string,
+    newParams:  Record<string, number>,
+    newColors?: Record<string, string>,
+  ) => {
     const next = instances.map((i) =>
-      i.uuid === uuid ? { ...i, params: newParams } : i
+      i.uuid === uuid
+        ? { ...i, params: newParams, ...(newColors !== undefined && { colors: newColors }) }
+        : i
     );
     setInstances(next);
     fetchPreview(currentAsset, currentTimeframe, next, true);
@@ -158,8 +164,12 @@ const DashboardPage = () => {
     setSettingsInstance(instance);
   };
 
-  const handleSettingsApply = (uuid: string, newParams: Record<string, number>) => {
-    handleUpdateInstance(uuid, newParams);
+  const handleSettingsApply = (
+    uuid:      string,
+    newParams: Record<string, number>,
+    newColors: Record<string, string>,
+  ) => {
+    handleUpdateInstance(uuid, newParams, newColors);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────

@@ -38,6 +38,10 @@ export type IndicatorInstance = {
   uuid:    string;                   // crypto.randomUUID()
   type_id: string;                   // "EMA"
   params:  Record<string, number>;   // { period: 50 }
+  // Optional per-instance color overrides: key_suffix → hex color.
+  // "" for single-output; "_upper"/"_mid"/"_lower" for bands; etc.
+  // Falls back to typeDef.series_styles[i].color when absent.
+  colors?: Record<string, string>;
 };
 
 // Flat response map: uuid (single-output) or uuid+suffix (multi-output) → values.
